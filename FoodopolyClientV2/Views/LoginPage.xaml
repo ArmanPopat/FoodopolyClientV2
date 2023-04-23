@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodopolyClientV2.Views.LoginPage"
+             Title="Login Page"
+             xmlns:viewmodels="clr-namespace:FoodopolyClientV2.ViewModels"
+             x:DataType="viewmodels:LoginViewModel"
+             >
+    <ContentPage.Resources>
+        
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="20, Auto, Auto, *, 20"
+          ColumnDefinitions="20, *, 20">
+        <Grid Grid.Column="1"
+              Grid.Row="1"
+              RowDefinitions="Auto, Auto, Auto, Auto"
+              ColumnDefinitions="*">
+            
+            <Label Text="User Sign In"
+                   Grid.Row="0"
+                   Grid.Column="0"/>
+            <Entry Placeholder="Username"
+                   Text="{Binding Username}"
+                   Grid.Row="1"
+                   Grid.Column="0"/>
+            <Entry Placeholder="Password"
+                   Text="{Binding Password}"
+                   Grid.Row="2"
+                   Grid.Column="0"/>
+            <Button Text="Submit"
+                    Command="{Binding StoreAndGoCommand}"
+                    Grid.Row="3"
+                    Grid.Column="0"/>
+        </Grid>
+        <Label Text="YO"
+               Grid.Row="2"
+               Grid.Column="1"/>
+    </Grid>
+
+</ContentPage>

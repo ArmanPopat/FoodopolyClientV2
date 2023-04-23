@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodopolyClientV2.Views.GamePage"
+             Title="GamePage"
+             xmlns:viewmodel="clr-namespace:FoodopolyClientV2.ViewModels"
+             x:DataType="viewmodel:GameViewModel"
+             
+             >
+
+    <Grid RowDefinitions = "20, *, *, *, *, *, *, *, *, *, *, 20"
+          ColumnDefinitions ="20, *, *, *, *, *, *, *, *, *, *, 20"
+          x:Name="gameGrid">
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="1"
+            x:Name="Pos0"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="2"
+            x:Name="Pos1"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="3"
+            x:Name="Pos2"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="4"
+            x:Name="Pos3"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="5"
+            x:Name="Pos4"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="6"
+            x:Name="Pos5"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="7"
+            x:Name="Pos6"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="8"
+            x:Name="Pos7"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="9"
+            x:Name="Pos8"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="10"
+            x:Name="Pos9"/>
+
+        
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="11"
+            x:Name="Pos10"/>
+        <Rectangle
+            Grid.Row="2"
+            Grid.Column="11"
+            x:Name="Pos11"/>
+        <Rectangle
+            Grid.Row="3"
+            Grid.Column="11"
+            x:Name="Pos12"/>
+        <Rectangle
+            Grid.Row="4"
+            Grid.Column="11"
+            x:Name="Pos13"/>
+        <Rectangle
+            Grid.Row="5"
+            Grid.Column="11"
+            x:Name="Pos14"/>
+        <Rectangle
+            Grid.Row="6"
+            Grid.Column="11"
+            x:Name="Pos15"/>
+        <Rectangle
+            Grid.Row="7"
+            Grid.Column="11"
+            x:Name="Pos16"/>
+        <Rectangle
+            Grid.Row="8"
+            Grid.Column="11"
+            x:Name="Pos17"/>
+        <Rectangle
+            Grid.Row="9"
+            Grid.Column="11"
+            x:Name="Pos18"/>
+        <Rectangle
+            Grid.Row="10"
+            Grid.Column="11"
+            x:Name="Pos19"/>
+
+        
+        <Rectangle
+            Grid.Row="11"
+            Grid.Column="11"
+            x:Name="Pos20"/>
+        <Rectangle
+            Grid.Row="10"
+            Grid.Column="11"
+            x:Name="Pos21"/>
+        <Rectangle
+            Grid.Row="9"
+            Grid.Column="11"
+            x:Name="Pos22"/>
+        <Rectangle
+            Grid.Row="8"
+            Grid.Column="11"
+            x:Name="Pos23"/>
+        <Rectangle
+            Grid.Row="7"
+            Grid.Column="11"
+            x:Name="Pos24"/>
+        <Rectangle
+            Grid.Row="6"
+            Grid.Column="11"
+            x:Name="Pos25"/>
+        <Rectangle
+            Grid.Row="5"
+            Grid.Column="11"
+            x:Name="Pos26"/>
+        <Rectangle
+            Grid.Row="4"
+            Grid.Column="11"
+            x:Name="Pos27"/>
+        <Rectangle
+            Grid.Row="3"
+            Grid.Column="11"
+            x:Name="Pos28"/>
+        <Rectangle
+            Grid.Row="2"
+            Grid.Column="11"
+            x:Name="Pos29"/>
+
+        
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="11"
+            x:Name="Pos30"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="10"
+            x:Name="Pos31"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="9"
+            x:Name="Pos32"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="8"
+            x:Name="Pos33"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="7"
+            x:Name="Pos34"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="6"
+            x:Name="Pos35"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="5"
+            x:Name="Pos36"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="4"
+            x:Name="Pos37"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="3"
+            x:Name="Pos38"/>
+        <Rectangle
+            Grid.Row="1"
+            Grid.Column="2"
+            x:Name="Pos39"/>
+
+        <Grid
+            Grid.Row="2"
+            Grid.Column="2"
+            Grid.ColumnSpan="8"
+            Grid.RowSpan="8"
+            RowDefinitions="20, *, 20"
+            ColumnDefinitions="20, *, 20">
+
+            <HorizontalStackLayout
+                Grid.Column="1"
+                Grid.Row="1"
+                IsVisible="{Binding CurrentTurn}">
+
+                <Button Text="Roll Dice"
+                        Command="{Binding RollDiceCommand}"/>
+            </HorizontalStackLayout>                
+
+            
+        </Grid>
+
+    </Grid>
+</ContentPage>
