@@ -16,6 +16,14 @@ using FoodopolyClasses.MultiplayerClasses;
 using BoardClasses;
 using Newtonsoft.Json;
 using System.Web.Http;
+using FoodopolyClientV2.Records;
+using System.Xml.Linq;
+using System.Collections.ObjectModel;
+using Microsoft.Maui.Graphics.Converters;
+using System.ComponentModel;
+using Microsoft.Maui.ApplicationModel;
+using FoodopolyClientV2.Views.Popups;
+using CommunityToolkit.Maui.Views;
 
 namespace FoodopolyClientV2.ViewModels;
 
@@ -26,24 +34,147 @@ public partial class GameViewModel:ObservableObject
 {
     //public GameClass game { get; set; }
     private SignalRHubServices _hubServices;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRoll))]
+    [NotifyPropertyChangedFor(nameof(CanEnd))]
+    [NotifyPropertyChangedFor(nameof(CurrentTurn))]
     private GameClass? _gameClass;
+
+    private void ManualNotifyGameClassChanged()
+    {
+        OnPropertyChanged(global::CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CanRoll);
+        OnPropertyChanged(global::CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CanEnd);
+        OnPropertyChanged(global::CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CurrentTurn);
+    }
+
     private HubConnection? _hubConnection;
 
     
 
+
+
+    //Props dependent on gameClass
+    public bool CanRoll
+    {
+        get
+        {
+            if (GameClass == null || !CurrentTurn)
+            {
+                return false;
+
+            }
+            return (!GameClass.Turn.RollEventDone);
+        }
+    }
+    public bool CanEnd
+    {
+        get
+        {
+            if (GameClass == null || !CurrentTurn)
+            {
+                return false;
+
+            }
+            //Need Adjustment!!!!!
+            return (GameClass.Turn.RollEventDone);
+        }
+    }
+    public bool CurrentTurn
+    {
+        get
+        {
+            if (GameClass == null)
+            {
+                return false;
+            }
+            if (GameClass.CurrentTurnPlayer.Name == Username)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+    
+
+    [ObservableProperty]
+    public bool canBuy = false;
     //public EventHandler Loaded;
     //public async Task OnLoad(object sender, EventArgs e)
     //{
     //    await StartConnecting();
     //}
-
+    //public List<BoardSpaceViewRecord> boardSpaces;
+    [ObservableProperty]
+    public ObservableCollection<BoardSpaceViewRecord> boardSpaces = new ObservableCollection<BoardSpaceViewRecord> (Enumerable.Repeat(new BoardSpaceViewRecord("name",1000,"set", Colors.White),40).ToArray());
+    //[ObservableProperty]
+    //public BoardSpaceViewRecord[] boardSpaces = Enumerable.Repeat(new BoardSpaceViewRecord("name",1000,"set"),40).ToArray();
+    //[ObservableProperty]
+    //public BoardSpaceViewRecord testBoardSpace = new BoardSpaceViewRecord("name", 1000, "set");
     public GameViewModel(SignalRHubServices hubServices)
     {
         _hubServices = hubServices;
-        msgs = new List<string>();
         serverRequestNum = 0;
-        currentTurn = false;
         TurnMultiplayer = new TurnMultiplayerClass();
+
+        //Test
+        //TestBoardSpace = new BoardSpaceViewRecord("Test1", 1, "Brown");
+
+        //implementing BoardSpaceViewRecords
+        //BoardSpaces = new BoardSpaceViewRecord[40];
+        XElement root = XElement.Load("Properties.xml");
+        IEnumerable<XElement> sets = root.Elements("set");
+
+        ColorTypeConverter colorTypeConverter = new ColorTypeConverter();
+        foreach (XElement set in sets)
+        {
+            string setOrType = (string)set.Attribute("set");
+            
+            Color colour;
+            if (setOrType == "Stations" ||setOrType == "Utilities")
+            {
+                colour = (Color)colorTypeConverter.ConvertFromInvariantString("White");
+            }
+            else
+            {
+                colour = (Color)colorTypeConverter.ConvertFromInvariantString(String.Concat(setOrType.Where(c => !Char.IsWhiteSpace(c))));
+            }
+
+            IEnumerable<XElement> properties = set.Elements("property");
+            foreach (XElement property in properties)
+            {
+                int boardPosition = (int)property.Element("boardPosition");
+                BoardSpaceViewRecord boardSpace = new BoardSpaceViewRecord((string)property.Element("name"), boardPosition, setOrType, colour);
+                BoardSpaces[boardPosition] = boardSpace;
+            }
+
+            
+        }
+        foreach (int n in new int[] { 7, 22, 36 })
+        {
+            BoardSpaceViewRecord boardSpaceChance = new BoardSpaceViewRecord("Chance", n, "Chance", (Color)colorTypeConverter.ConvertFromInvariantString("White"));
+            BoardSpaces[n] = boardSpaceChance;
+        }
+
+        foreach (int n in new int[] { 2, 17, 33 })
+        {
+            BoardSpaceViewRecord boardSpaceCChest = new BoardSpaceViewRecord("CChest", n, "CChest", (Color)colorTypeConverter.ConvertFromInvariantString("White"));
+            BoardSpaces[n] = boardSpaceCChest;
+        }
+
+        //Fines
+        BoardSpaces[4] = new BoardSpaceViewRecord("FoodTax", 4, "Fines", (Color)colorTypeConverter.ConvertFromInvariantString("White"));
+        BoardSpaces[38] = new BoardSpaceViewRecord("FoodWasteTax", 38, "Fines", (Color)colorTypeConverter.ConvertFromInvariantString("White"));
+
+        //OddOnes
+        BoardSpaces[0] = new BoardSpaceViewRecord("Start", 0, "Start", (Color)colorTypeConverter.ConvertFromInvariantString("White"));
+        BoardSpaces[10] = new BoardSpaceViewRecord("Dieting", 10, "Dieting", (Color)colorTypeConverter.ConvertFromInvariantString("White"));
+        BoardSpaces[20] = new BoardSpaceViewRecord("Buffet", 20, "Buffet", (Color)colorTypeConverter.ConvertFromInvariantString("White"));
+        BoardSpaces[30] = new BoardSpaceViewRecord("Go On A Diet", 30, "Go On A Diet", (Color)colorTypeConverter.ConvertFromInvariantString("White"));
+
 
     }
     [ObservableProperty]
@@ -53,9 +184,9 @@ public partial class GameViewModel:ObservableObject
     [ObservableProperty]
     string password;
     [ObservableProperty]
-    List<string> msgs;
-    [ObservableProperty]
-    bool currentTurn;
+    ObservableCollection<string> msgs = new ObservableCollection<string>();
+
+
 
 
 
@@ -68,7 +199,7 @@ public partial class GameViewModel:ObservableObject
         
         Dictionary<string, string> urlArgs = new Dictionary<string, string>();
         urlArgs.Add("username", Username); urlArgs.Add("password", Password); urlArgs.Add("gameId", GameId);
-        var connectionAndMessage = await _hubServices.HubBuilder("https://localhost:32772" +
+        var connectionAndMessage = await _hubServices.HubBuilder("https://localhost:32776" +
             "/connected/game", urlArgs);
         if (connectionAndMessage.hubConnection == null)
         {
@@ -86,21 +217,21 @@ public partial class GameViewModel:ObservableObject
         {
             await Task.Run(() =>
             {
-                _gameClass = game;
+                //Reset dependable view props
+                CanBuy = false;
+
+                GameClass = game;
 
                 //makes a copy of the parameters of this object to a local copy here
                 TurnMultiplayer.turnMethodCount = game.TurnMultiplayer.turnMethodCount;
                 TurnMultiplayer.turnMsgCount = game.TurnMultiplayer.turnMsgCount;
-
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    UpdateAllPos();
+                });
+                
                 //Adjust Current turn object
-                if (game.CurrentTurnPlayer.Name == Username)
-                {
-                    CurrentTurn = true;
-                }
-                else
-                {
-                    CurrentTurn = false;
-                }
+                //NOT NEEDED ANYMORE
             });
             
             
@@ -112,7 +243,7 @@ public partial class GameViewModel:ObservableObject
         //    await Task.Run(() =>
         //    {
         //        GameClass game = JsonConvert.DeserializeObject<GameClass>(gameJsonString);
-        //        _gameClass = game;
+        //        GameClass = game;
 
         //        //makes a copy of the parameters of this object to a local copy here
         //        Turn.turnMethodCount = game.Turn.turnMethodCount;
@@ -142,20 +273,45 @@ public partial class GameViewModel:ObservableObject
         _hubConnection.On<int, string, int>("Bought", async (methodCount, buyUsername, buyPlayerPos) =>
         {
             //Do something with method count
-            if (_gameClass.CurrentTurnPlayer.Name != buyUsername || _gameClass.CurrentTurnPlayer.PlayerPos != buyPlayerPos)
+            if (GameClass.CurrentTurnPlayer.Name != buyUsername || GameClass.CurrentTurnPlayer.PlayerPos != buyPlayerPos)
             {
                 await ErrorSendBack("Not Synced. Please Reconnect.");
                 return;
             }
 
             //call buy here locally
-            string msg = _gameClass.CurrentTurnPlayer.BuyPlayer(_gameClass);
+            string msg = GameClass.CurrentTurnPlayer.BuyPlayer(GameClass);
+            CanBuy = false;
+            ManualNotifyGameClassChanged();
             Msgs.Add(msg);
+            
+            //Adjust PlayerColor on Prop
+            BoardSpaceViewRecord tempSpaceVar = BoardSpaces[GameClass.CurrentTurnPlayer.PlayerPos];
+            //Remember CurrentTurnPos starts from 1
+            tempSpaceVar.PlayerOwnerNum = GameClass.CurrentTurnPos;
         });
 
-        _hubConnection.On<(int,GameClass)>("TurnStart", (turnNum) =>
+        _hubConnection.On<int , GameClass, string>("StartTurn", async (turnNum, game, msg) =>
         {
-            
+            //Do something with method count
+            await Task.Run(() =>
+            {
+                //reset All view dependable props Props
+                CanBuy = false;
+
+                GameClass = game;
+
+                //makes a copy of the parameters of this object to a local copy here
+                TurnMultiplayer.turnMethodCount = game.TurnMultiplayer.turnMethodCount;
+                TurnMultiplayer.turnMsgCount = game.TurnMultiplayer.turnMsgCount;
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    UpdateAllPos();
+                });
+                //Adjust Current turn object
+                //NOT NEEDED ANYMORE
+                Msgs.Add(msg);
+            });
         });
 
         _hubConnection.On<(string Msg, bool Double, bool Diet, int TotalRoll), int>("RecieveStandardDiceRoll", async (msgAndDoubleAndJailAndTotal,methodCount) =>
@@ -172,16 +328,32 @@ public partial class GameViewModel:ObservableObject
 
                 if (msgAndDoubleAndJailAndTotal.Diet)
                 {
-                    _gameClass.goOnADiet.GoOnADietMethod(_gameClass.CurrentTurnPlayer, _gameClass);
+                    GameClass.goOnADiet.GoOnADietMethod(GameClass.CurrentTurnPlayer, GameClass);
+                    ManualNotifyGameClassChanged();
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        UpdatePos(GameClass.CurrentTurnPos);
+                    });
+                    
                     return;
                 }
                 else
                 {
                     //Moves the Player appropriately, ignore msg and forward, already accounted for
-                    _gameClass.CurrentTurnPlayer.FullChangePlayerPos(msgAndDoubleAndJailAndTotal.TotalRoll);
+                    GameClass.CurrentTurnPlayer.FullChangePlayerPos(msgAndDoubleAndJailAndTotal.TotalRoll);
+                    ManualNotifyGameClassChanged();
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        UpdatePos(GameClass.CurrentTurnPos);
+                    });
 
                     //Calls the appropriate landevent-done Independently on server and client side, see if it works
-                    taskAndMsg = await _gameClass.CurrentTurnPlayer.LandEventAsync(_gameClass);
+                    taskAndMsg = await GameClass.CurrentTurnPlayer.LandEventAsync(GameClass);
+                    ManualNotifyGameClassChanged();
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        UpdatePos(GameClass.CurrentTurnPos);
+                    });
                     //Add msg to list if appropriate (list is console in game)
                     if (!string.IsNullOrEmpty(taskAndMsg.Result))
                     {
@@ -191,18 +363,23 @@ public partial class GameViewModel:ObservableObject
                     if(!msgAndDoubleAndJailAndTotal.Double)
                     {
                         //ends Roll Event
-                        _gameClass.Turn.RollEventDone = true;
+
+                        GameClass.Turn.RollEventDone = true;
+                        ManualNotifyGameClassChanged();
+
                     }
                     
                 }
 
-                if (taskAndMsg.Result == "CanBuy")
+                if (taskAndMsg.DoTask == "CanBuy" && CurrentTurn)
                 {
                     //Allow To Buy
+                    CanBuy = true;
                 }
-                if (!_gameClass.Turn.RollEventDone)
+                if (!GameClass.Turn.RollEventDone)
                 {
                     //Allow Another Roll
+                    //Should already be covered by property
                 }
 
             });
@@ -221,7 +398,7 @@ public partial class GameViewModel:ObservableObject
         {
             await ErrorSendBack(ex.Message);
         }
-        //foreach (KeyValuePair<string, Set> entry in _gameClass.setsDict)
+        //foreach (KeyValuePair<string, Set> entry in GameClass.setsDict)
         //{
 
         //}
@@ -271,6 +448,24 @@ public partial class GameViewModel:ObservableObject
         //});
     }
 
+    [RelayCommand]
+    async Task EndTurn()
+    {
+        //validation
+        if (!CurrentTurn || !CanEnd)
+        {
+            await ErrorSendBack("Please Reconnect!");
+        }
+
+        //Implementation
+        PlayerAuthorisationRecord player = new PlayerAuthorisationRecord(Username, Password);
+
+        await _hubConnection.InvokeAsync("EndTurn", player, TurnMultiplayer.turnMethodCount);
+
+    }
+
+
+
 
     //Command that is triggered by Buy Button
     [RelayCommand]
@@ -283,17 +478,17 @@ public partial class GameViewModel:ObservableObject
         await Task.Run(async () =>
         {
             int Price = 1000; //To satisfy error, look into later
-            if (_gameClass.CurrentTurnPlayer.Name != Username)
+            if (GameClass.CurrentTurnPlayer.Name != Username)
             {
                 await ErrorSendBack("Please Reconnect");
                 return;
             }
-            int pos = _gameClass.CurrentTurnPlayer.PlayerPos;
+            int pos = GameClass.CurrentTurnPlayer.PlayerPos;
            
             //using modulo here
             if (pos%10 == 5)
             {
-                Station station = _gameClass.stations.Properties.First(station => station.BoardPosition == pos);
+                Station station = GameClass.stations.Properties.First(station => station.BoardPosition == pos);
                 if (station.Owned) 
                 {
                     await ErrorSendBack("Please Reconnect");
@@ -303,7 +498,7 @@ public partial class GameViewModel:ObservableObject
             }
             if (pos == 12 || pos == 28)
             {
-                Utility utility = _gameClass.utilities.Properties.First(utility => utility.BoardPosition == pos);
+                Utility utility = GameClass.utilities.Properties.First(utility => utility.BoardPosition == pos);
                 if (utility.Owned)
                 {
                     await ErrorSendBack("Please Reconnect");
@@ -316,7 +511,7 @@ public partial class GameViewModel:ObservableObject
                 try
                 {
                     
-                    foreach (KeyValuePair<string, SetProp> keyValuePair in _gameClass.setsPropDict)
+                    foreach (KeyValuePair<string, SetProp> keyValuePair in GameClass.setsPropDict)
                     {
                         Property selectedProp;
                         foreach (Property property in keyValuePair.Value.Properties)
@@ -341,7 +536,7 @@ public partial class GameViewModel:ObservableObject
                     return;
                 }
             }
-            if (Price>_gameClass.CurrentTurnPlayer.Cash)
+            if (Price>GameClass.CurrentTurnPlayer.Cash)
             {
                 await ErrorSendBack("Not Enough Cash. Error. Please Reconnect");
                 return;
@@ -350,21 +545,78 @@ public partial class GameViewModel:ObservableObject
             //Implementation
             PlayerAuthorisationRecord player = new PlayerAuthorisationRecord(Username, Password);
 
-            await _hubConnection.InvokeAsync("Buy", player, TurnMultiplayer.turnMethodCount, _gameClass.CurrentTurnPlayer.PlayerPos);
+            await _hubConnection.InvokeAsync("Buy", player, TurnMultiplayer.turnMethodCount, GameClass.CurrentTurnPlayer.PlayerPos);
         });
         
         
     }
+
+    //public void AddMsg(string msg)
+    //{
+    //    Msgs.Add(msg);
+    //    OnPropertyChanged(global::CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.Msgs);
+
+    //}
 
 
 
     async Task<PlayerClass> IdentifyPlayer()
     {
 
-        PlayerClass player = _gameClass.PlayerList.First<PlayerClass>((player) => (player.Name == Username));
+        PlayerClass player = GameClass.PlayerList.First<PlayerClass>((player) => (player.Name == Username));
         return player;
     }
 
+
+    private void UpdatePos(int playerPos)
+    {
+        if (playerPos == 1)
+        {
+            foreach (BoardSpaceViewRecord viewSpace in BoardSpaces)
+            {
+                viewSpace.P1Here = false;
+            }
+            BoardSpaces[GameClass.PlayerList[0].PlayerPos].P1Here = true;
+        }
+        else if (playerPos == 2)
+        {
+            foreach (BoardSpaceViewRecord viewSpace in BoardSpaces)
+            {
+                viewSpace.P2Here = false;
+            }
+            BoardSpaces[GameClass.PlayerList[1].PlayerPos].P2Here = true;
+        }
+        else if (playerPos == 3)
+        {
+            foreach (BoardSpaceViewRecord viewSpace in BoardSpaces)
+            {
+                viewSpace.P3Here = false;
+            }
+            BoardSpaces[GameClass.PlayerList[2].PlayerPos].P3Here = true;
+        }
+        else if (playerPos == 4)
+        {
+            foreach (BoardSpaceViewRecord viewSpace in BoardSpaces)
+            {
+                viewSpace.P4Here = false;
+            }
+            BoardSpaces[GameClass.PlayerList[3].PlayerPos].P4Here = true;
+        }
+        else
+        {
+            ErrorSendBack("Error, Please Try Again"); //Should be fine not awaiting
+            return;
+        }
+    }
+
+    private void UpdateAllPos()
+    {
+        int lenPL = GameClass.PlayerList.Count;
+        foreach (int n in Enumerable.Range(1, lenPL))
+        {
+            UpdatePos(n);
+        }
+    }
 
 }
 

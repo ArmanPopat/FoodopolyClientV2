@@ -1,6 +1,8 @@
-﻿using ConnectivityLibrary.Services;
+﻿using CommunityToolkit.Maui;
+using ConnectivityLibrary.Services;
 using FoodopolyClientV2.ViewModels;
 using FoodopolyClientV2.Views;
+using FoodopolyClientV2.Views.Popups;
 //using ConnectivityLibrary.Services; service static atm, so not addiing it here?
 
 namespace FoodopolyClientV2;
@@ -12,6 +14,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -27,6 +30,7 @@ public static class MauiProgram
         builder.Services.AddTransient<GamePage>();
         builder.Services.AddTransient<GameViewModel>();
 
+        //builder.Services.AddTransient<PropertyPopup>();
 
         //services
         builder.Services.AddTransient<SignalRHubServices>();

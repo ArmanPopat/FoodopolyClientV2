@@ -4,186 +4,480 @@
              x:Class="FoodopolyClientV2.Views.GamePage"
              Title="GamePage"
              xmlns:viewmodel="clr-namespace:FoodopolyClientV2.ViewModels"
+             xmlns:records="clr-namespace:FoodopolyClientV2.Records"
              x:DataType="viewmodel:GameViewModel"
+             xmlns:local="clr-namespace:FoodopolyClientV2"
+             xmlns:controls="clr-namespace:FoodopolyClientV2.Controls"
              
              >
+    <ContentPage.Resources>
+        <ControlTemplate x:Key="BoardSpaceViewControlTemplate"
+                         >
+            <Frame BindingContext="{Binding Source={RelativeSource AncestorType={x:Type records:BoardSpaceViewRecord}}}"
+                   x:DataType="records:BoardSpaceViewRecord"
+                 BorderColor="Black"
+                 CornerRadius="0"
+                 Padding="2"
+                 HorizontalOptions="Fill"
+                 VerticalOptions="Fill"
+                 >
 
-    <Grid RowDefinitions = "20, *, *, *, *, *, *, *, *, *, *, 20"
-          ColumnDefinitions ="20, *, *, *, *, *, *, *, *, *, *, 20"
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer NumberOfTapsRequired="1"
+                                          Command="{Binding ShowPropertyModalCommand}"/>
+                </Frame.GestureRecognizers>
+                
+                <Grid RowDefinitions="5,*,3*,*,5"
+                      ColumnDefinitions="*">
+                    <Label Text="{Binding Name}"
+                           BackgroundColor="{Binding Colour}"
+                           Grid.Row="1"
+                           Grid.Column="0"/>
+                    <ContentView Grid.Row="2"
+                                 Grid.Column="0">
+                        <HorizontalStackLayout Spacing="2">
+                            <RoundRectangle BackgroundColor="Red"
+                                            IsVisible="{Binding P1Here}">
+                            </RoundRectangle>
+                            <RoundRectangle BackgroundColor="Green"
+                                            IsVisible="{Binding P2Here}">
+                            </RoundRectangle>
+                            <RoundRectangle BackgroundColor="Yellow"
+                                            IsVisible="{Binding P3Here}">
+                            </RoundRectangle>
+                            <RoundRectangle BackgroundColor="Blue"
+                                            IsVisible="{Binding P4Here}">
+                            </RoundRectangle>
+                        </HorizontalStackLayout>
+                    </ContentView>
+                    <Rectangle
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        BackgroundColor="{Binding PlayerColor}">
+                        
+                    </Rectangle>
+
+                </Grid>
+            </Frame>
+        </ControlTemplate>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions = "20, *, *, *, *, *, *, *, *, *, *, *, 20"
+          ColumnDefinitions ="20, *, *, *, *, *, *, *, *, *, *, *, 20"
           x:Name="gameGrid">
-        <Rectangle
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[0]}"
             Grid.Row="1"
-            Grid.Column="1"
-            x:Name="Pos0"/>
-        <Rectangle
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[1]}"
             Grid.Row="1"
-            Grid.Column="2"
-            x:Name="Pos1"/>
-        <Rectangle
+            Grid.Column="2">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[2]}"
             Grid.Row="1"
-            Grid.Column="3"
-            x:Name="Pos2"/>
-        <Rectangle
+            Grid.Column="3">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[3]}"
             Grid.Row="1"
-            Grid.Column="4"
-            x:Name="Pos3"/>
-        <Rectangle
+            Grid.Column="4">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[4]}"
             Grid.Row="1"
-            Grid.Column="5"
-            x:Name="Pos4"/>
-        <Rectangle
+            Grid.Column="5">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[5]}"
             Grid.Row="1"
-            Grid.Column="6"
-            x:Name="Pos5"/>
-        <Rectangle
+            Grid.Column="6">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[6]}"
             Grid.Row="1"
-            Grid.Column="7"
-            x:Name="Pos6"/>
-        <Rectangle
+            Grid.Column="7">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[7]}"
             Grid.Row="1"
-            Grid.Column="8"
-            x:Name="Pos7"/>
-        <Rectangle
+            Grid.Column="8">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[8]}"
             Grid.Row="1"
-            Grid.Column="9"
-            x:Name="Pos8"/>
-        <Rectangle
+            Grid.Column="9">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[9]}"
             Grid.Row="1"
-            Grid.Column="10"
-            x:Name="Pos9"/>
+            Grid.Column="10">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
 
-        
-        <Rectangle
+
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[10]}"
             Grid.Row="1"
-            Grid.Column="11"
-            x:Name="Pos10"/>
-        <Rectangle
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[11]}"
             Grid.Row="2"
-            Grid.Column="11"
-            x:Name="Pos11"/>
-        <Rectangle
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[12]}"
             Grid.Row="3"
-            Grid.Column="11"
-            x:Name="Pos12"/>
-        <Rectangle
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[13]}"
             Grid.Row="4"
-            Grid.Column="11"
-            x:Name="Pos13"/>
-        <Rectangle
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[14]}"
             Grid.Row="5"
-            Grid.Column="11"
-            x:Name="Pos14"/>
-        <Rectangle
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[15]}"
             Grid.Row="6"
-            Grid.Column="11"
-            x:Name="Pos15"/>
-        <Rectangle
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[16]}"
             Grid.Row="7"
-            Grid.Column="11"
-            x:Name="Pos16"/>
-        <Rectangle
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[17]}"
             Grid.Row="8"
-            Grid.Column="11"
-            x:Name="Pos17"/>
-        <Rectangle
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[18]}"
             Grid.Row="9"
-            Grid.Column="11"
-            x:Name="Pos18"/>
-        <Rectangle
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[19]}"
             Grid.Row="10"
-            Grid.Column="11"
-            x:Name="Pos19"/>
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
 
-        
-        <Rectangle
+
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[20]}"
             Grid.Row="11"
-            Grid.Column="11"
-            x:Name="Pos20"/>
-        <Rectangle
-            Grid.Row="10"
-            Grid.Column="11"
-            x:Name="Pos21"/>
-        <Rectangle
-            Grid.Row="9"
-            Grid.Column="11"
-            x:Name="Pos22"/>
-        <Rectangle
-            Grid.Row="8"
-            Grid.Column="11"
-            x:Name="Pos23"/>
-        <Rectangle
-            Grid.Row="7"
-            Grid.Column="11"
-            x:Name="Pos24"/>
-        <Rectangle
-            Grid.Row="6"
-            Grid.Column="11"
-            x:Name="Pos25"/>
-        <Rectangle
-            Grid.Row="5"
-            Grid.Column="11"
-            x:Name="Pos26"/>
-        <Rectangle
-            Grid.Row="4"
-            Grid.Column="11"
-            x:Name="Pos27"/>
-        <Rectangle
-            Grid.Row="3"
-            Grid.Column="11"
-            x:Name="Pos28"/>
-        <Rectangle
-            Grid.Row="2"
-            Grid.Column="11"
-            x:Name="Pos29"/>
+            Grid.Column="11">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[21]}"
+            Grid.Row="11"
+            Grid.Column="10">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[22]}"
+            Grid.Row="11"
+            Grid.Column="9">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[23]}"
+            Grid.Row="11"
+            Grid.Column="8">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[24]}"
+            Grid.Row="11"
+            Grid.Column="7">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[25]}"
+            Grid.Row="11"
+            Grid.Column="6">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[26]}"
+            Grid.Row="11"
+            Grid.Column="5">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[27]}"
+            Grid.Row="11"
+            Grid.Column="4">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[28]}"
+            Grid.Row="11"
+            Grid.Column="3">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[29]}"
+            Grid.Row="11"
+            Grid.Column="2">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
 
-        
-        <Rectangle
-            Grid.Row="1"
-            Grid.Column="11"
-            x:Name="Pos30"/>
-        <Rectangle
-            Grid.Row="1"
-            Grid.Column="10"
-            x:Name="Pos31"/>
-        <Rectangle
-            Grid.Row="1"
-            Grid.Column="9"
-            x:Name="Pos32"/>
-        <Rectangle
-            Grid.Row="1"
-            Grid.Column="8"
-            x:Name="Pos33"/>
-        <Rectangle
-            Grid.Row="1"
-            Grid.Column="7"
-            x:Name="Pos34"/>
-        <Rectangle
-            Grid.Row="1"
-            Grid.Column="6"
-            x:Name="Pos35"/>
-        <Rectangle
-            Grid.Row="1"
-            Grid.Column="5"
-            x:Name="Pos36"/>
-        <Rectangle
-            Grid.Row="1"
-            Grid.Column="4"
-            x:Name="Pos37"/>
-        <Rectangle
-            Grid.Row="1"
-            Grid.Column="3"
-            x:Name="Pos38"/>
-        <Rectangle
-            Grid.Row="1"
-            Grid.Column="2"
-            x:Name="Pos39"/>
+
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[30]}"
+            Grid.Row="11"
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[31]}"
+            Grid.Row="10"
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[32]}"
+            Grid.Row="9"
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[33]}"
+            Grid.Row="8"
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[34]}"
+            Grid.Row="7"
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[35]}"
+            Grid.Row="6"
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[36]}"
+            Grid.Row="5"
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[37]}"
+            Grid.Row="4"
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[38]}"
+            Grid.Row="3"
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
+        <ContentView 
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill"
+            BindingContext="{Binding BoardSpaces[39]}"
+            Grid.Row="2"
+            Grid.Column="1">
+            <controls:BoardSpaceView
+                x:DataType="records:BoardSpaceViewRecord"
+                ControlTemplate="{StaticResource BoardSpaceViewControlTemplate}"/>
+        </ContentView>
 
         <Grid
             Grid.Row="2"
             Grid.Column="2"
             Grid.ColumnSpan="8"
             Grid.RowSpan="8"
-            RowDefinitions="20, *, 20"
+            RowDefinitions="20, *, 4*,20"
             ColumnDefinitions="20, *, 20">
 
             <HorizontalStackLayout
@@ -192,9 +486,35 @@
                 IsVisible="{Binding CurrentTurn}">
 
                 <Button Text="Roll Dice"
-                        Command="{Binding RollDiceCommand}"/>
-            </HorizontalStackLayout>                
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        Command="{Binding RollDiceCommand}"
+                        IsVisible="{Binding CanRoll}"
+                        />
+                <Button Text="Buy"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        Command="{Binding BuyCommand}"
+                        IsVisible="{Binding CanBuy}"
+                        />
+                <Button Text="End Turn"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        Command="{Binding EndTurnCommand}"
+                        IsVisible="{Binding CanEnd}"
+                        />
+            </HorizontalStackLayout>
 
+            <CollectionView ItemsSource="{Binding Msgs}"
+                            Grid.Column="1"
+                            Grid.Row="2"
+                            >
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="FormattedString">
+                        <Label Text="{Binding . }"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
             
         </Grid>
 

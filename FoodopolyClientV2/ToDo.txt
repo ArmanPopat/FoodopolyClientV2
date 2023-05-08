@@ -1,1 +1,6 @@
 ﻿Get keyboard to hide after you hit submit on login
+
+
+CanBuy Not Triggering
+
+Doubles Roll causes Error
