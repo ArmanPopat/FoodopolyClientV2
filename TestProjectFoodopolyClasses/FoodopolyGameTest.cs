@@ -22,5 +22,11 @@ namespace TestProjectFoodopolyClasses
             Assert.Equal(2, prop2.NumOfUpgrades);
 
         }
+        [Fact]
+        public void Test()
+        {
+
+        }
+
     }
 }

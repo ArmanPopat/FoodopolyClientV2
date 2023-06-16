@@ -24,7 +24,8 @@
 
                 <Frame.GestureRecognizers>
                     <TapGestureRecognizer NumberOfTapsRequired="1"
-                                          Command="{Binding ShowPropertyModalCommand}"/>
+                                          Command="{Binding ShowPropertyModalCommand, Source = {RelativeSource AncestorType={x:Type viewmodel:GameViewModel}}}"
+                                          CommandParameter="{Binding BoardPosition}"/>
                 </Frame.GestureRecognizers>
                 
                 <Grid RowDefinitions="5,*,3*,*,5"
@@ -496,6 +497,7 @@
                         VerticalOptions="Center"
                         Command="{Binding BuyCommand}"
                         IsVisible="{Binding CanBuy}"
+                        IsEnabled="{Binding CanAfford}"
                         />
                 <Button Text="End Turn"
                         HorizontalOptions="Center"
@@ -503,6 +505,10 @@
                         Command="{Binding EndTurnCommand}"
                         IsVisible="{Binding CanEnd}"
                         />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout>
+                <Label Text="Your Cash:"/>
+                <Label Text="{Binding YourCash}"/>
             </HorizontalStackLayout>
 
             <CollectionView ItemsSource="{Binding Msgs}"

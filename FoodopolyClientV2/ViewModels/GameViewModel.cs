@@ -24,6 +24,9 @@ using System.ComponentModel;
 using Microsoft.Maui.ApplicationModel;
 using FoodopolyClientV2.Views.Popups;
 using CommunityToolkit.Maui.Views;
+using FoodopolyClientV2.ViewModels.Popups;
+using Microsoft.Maui.Layouts;
+using System.Diagnostics;
 
 namespace FoodopolyClientV2.ViewModels;
 
@@ -39,6 +42,8 @@ public partial class GameViewModel:ObservableObject
     [NotifyPropertyChangedFor(nameof(CanRoll))]
     [NotifyPropertyChangedFor(nameof(CanEnd))]
     [NotifyPropertyChangedFor(nameof(CurrentTurn))]
+    [NotifyPropertyChangedFor(nameof(CanAfford))]
+    [NotifyPropertyChangedFor(nameof(YourCash))]
     private GameClass? _gameClass;
 
     private void ManualNotifyGameClassChanged()
@@ -46,6 +51,8 @@ public partial class GameViewModel:ObservableObject
         OnPropertyChanged(global::CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CanRoll);
         OnPropertyChanged(global::CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CanEnd);
         OnPropertyChanged(global::CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CurrentTurn);
+        OnPropertyChanged(global::CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CanAfford);
+        OnPropertyChanged(global::CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.YourCash);
     }
 
     private HubConnection? _hubConnection;
@@ -98,10 +105,81 @@ public partial class GameViewModel:ObservableObject
             }
         }
     }
-    
+    public int YourCash
+    {
+        get
+        {
+            if (GameClass == null)
+            {
+                return 0;
+            }
+            try
+            {
+                return GameClass.PlayerList.First(o => o.Name == Username).Cash;
+            }
+            catch
+            {
+                ErrorSendBack("Error in game. Please Reconnect");
+                return 0;
+            }
+            
+        }
+    }
+
+    //Checks if can afford, will update with gameclass
+    public bool CanAfford
+    {
+        get
+        {
+            if (!CurrentTurn)
+            {
+                return false;
+            }
+            var undesiderdPos = new int[] { 7, 22, 36, 2, 17, 33, 0, 10, 20, 30, 4, 38 };
+            if (undesiderdPos.Any(o => o == GameClass.CurrentTurnPlayer.PlayerPos))
+            {
+                return false;
+            }
+            foreach (Station tempProp in GameClass.stations.Properties)
+            {
+                if (tempProp.BoardPosition == GameClass.CurrentTurnPlayer.PlayerPos)
+                {
+                    if (GameClass.CurrentTurnPlayer.Cash >= tempProp.Price)
+                    {
+                        return true;
+                    }
+                }
+            }
+            foreach (Utility tempProp in GameClass.utilities.Properties)
+            {
+                if (tempProp.BoardPosition == GameClass.CurrentTurnPlayer.PlayerPos)
+                {
+                    if (GameClass.CurrentTurnPlayer.Cash >= tempProp.Price)
+                    {
+                        return true;
+                    }
+                }
+            }
+            foreach (KeyValuePair<string, SetProp> keyValue in GameClass.setsPropDict)
+            {
+                foreach (Property tempProp in keyValue.Value.Properties)
+                {
+                    if (tempProp.BoardPosition == GameClass.CurrentTurnPlayer.PlayerPos)
+                    {
+                        if (GameClass.CurrentTurnPlayer.Cash >= tempProp.Price)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+    }
 
     [ObservableProperty]
     public bool canBuy = false;
+
     //public EventHandler Loaded;
     //public async Task OnLoad(object sender, EventArgs e)
     //{
@@ -227,7 +305,7 @@ public partial class GameViewModel:ObservableObject
                 TurnMultiplayer.turnMsgCount = game.TurnMultiplayer.turnMsgCount;
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    UpdateAllPos();
+                    UpdateAllViewRecord();
                 });
                 
                 //Adjust Current turn object
@@ -285,10 +363,11 @@ public partial class GameViewModel:ObservableObject
             ManualNotifyGameClassChanged();
             Msgs.Add(msg);
             
-            //Adjust PlayerColor on Prop
+            //Adjust PlayerColor on Prop and Name
             BoardSpaceViewRecord tempSpaceVar = BoardSpaces[GameClass.CurrentTurnPlayer.PlayerPos];
             //Remember CurrentTurnPos starts from 1
             tempSpaceVar.PlayerOwnerNum = GameClass.CurrentTurnPos;
+            tempSpaceVar.playerOwnerName = GameClass.CurrentTurnPlayer.Name;
         });
 
         _hubConnection.On<int , GameClass, string>("StartTurn", async (turnNum, game, msg) =>
@@ -306,7 +385,7 @@ public partial class GameViewModel:ObservableObject
                 TurnMultiplayer.turnMsgCount = game.TurnMultiplayer.turnMsgCount;
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    UpdateAllPos();
+                    UpdateAllViewRecord();
                 });
                 //Adjust Current turn object
                 //NOT NEEDED ANYMORE
@@ -376,18 +455,49 @@ public partial class GameViewModel:ObservableObject
                     //Allow To Buy
                     CanBuy = true;
                 }
-                if (!GameClass.Turn.RollEventDone)
-                {
-                    //Allow Another Roll
-                    //Should already be covered by property
-                }
+                //if (!GameClass.Turn.RollEventDone)
+                //{
+                //    //Allow Another Roll
+                //    //Should already be covered by property
+                //}
 
             });
 
             
         });
-        
-        
+
+        //Called to upgrade property
+        _hubConnection.On<int, int>("Upgrade", async (boardPosition, methodCount) =>
+        {
+            await Task.Run(async () =>
+            {
+                foreach (KeyValuePair<string, SetProp> keyValue in GameClass.setsPropDict)
+                {
+                    foreach (Property property in keyValue.Value.Properties)
+                    {
+                        if (property.BoardPosition == boardPosition)
+                        {
+
+                            //Checking
+                            if (property.Owned && keyValue.Value.SetExclusivelyOwned)
+                            {
+                                if (property.NumOfUpgrades < 5)
+                                {
+                                    if (keyValue.Value.Properties.All(o => o.NumOfUpgrades >= property.NumOfUpgrades))
+                                    {
+                                        //Upgrade On Client Side and displays message
+                                        Msgs.Add(property.Upgrade());
+                                        return;
+                                    }
+                                }
+                            }
+                            await ErrorSendBack("Not Synced. Please Reconnect.");
+                            return;
+                        }
+                    }
+                }
+            });
+        });
 
         try
         {
@@ -471,7 +581,7 @@ public partial class GameViewModel:ObservableObject
     [RelayCommand]
     async Task Buy()
     {
-        //Disable Button And Commands Here
+
 
 
         //Validation
@@ -558,6 +668,205 @@ public partial class GameViewModel:ObservableObject
 
     //}
 
+    static Page Page => Application.Current?.MainPage ?? throw new NullReferenceException();
+
+    [RelayCommand]
+    async Task ShowPropertyModal(int boardPos)
+    {
+        if (GameClass == null)
+        {
+            await ErrorSendBack("Game Not Synced");
+            return;
+        }
+
+        await Task.Run(() =>
+        {
+            string nameHere = string.Empty;
+            int rent = 0;
+            int rentL1 = 0;
+            int rentL2 = 0;
+            int rentL3 = 0;
+            int rentL4 = 0;
+            int rentL5 = 0;
+            string typeOrSet = string.Empty;
+            int theBoardPos = 1000;
+            string ownerName = string.Empty;
+
+            //Helps show which should be bolded, i.e. which rent players pay
+            bool setExclusivelyOwned = false;
+            int rentLevel = 0;
+
+            //Doesn't check if side props are upgraded or enough cash
+            bool upgradablePotential = false;
+
+            //ToDo, i.e if button is enables if other set props are upgraded enough, enough cash etc. DIFFERENT TO upgradablePotenial which just ask if possible
+            bool upgradeEnabled = false;
+
+            if (boardPos == 7 || boardPos == 22 || boardPos == 36)
+            {
+                nameHere = "Chance";
+                theBoardPos = boardPos;
+                //return;
+            }
+
+
+            else if (boardPos == 2 || boardPos == 17 || boardPos == 33)
+            {
+                nameHere = "Chance";
+                theBoardPos = boardPos;
+                //return;
+            }
+
+            else if (boardPos == 0)
+            {
+                nameHere = "Start;";
+                theBoardPos = boardPos;
+            }
+            else if (boardPos == 10)
+            {
+                nameHere = "Dieting";
+                theBoardPos = boardPos;
+            }
+            else if (boardPos == 20)
+            {
+                nameHere = "Buffet";
+                theBoardPos = boardPos;
+            }
+            else if (boardPos == 30)
+            {
+                nameHere = "Go On A Diet";
+                theBoardPos = boardPos;
+            }
+            else if (boardPos == 4)
+            {
+                nameHere = "FoodTax";
+                theBoardPos = boardPos;
+            }
+            else if (boardPos == 38)
+            {
+                nameHere = "FoodWasteTax";
+                theBoardPos = boardPos;
+            }
+            else if (boardPos == 5 || boardPos == 15 || boardPos == 25 || boardPos == 35 )
+            {
+                Station station = GameClass.stations.Properties.First<Station>(x => x.BoardPosition == boardPos);
+                nameHere = station.Name;
+                rent = station.RentL1;
+                rentL1 = station.RentL2;
+                rentL2 = station.RentL3;
+                rentL3 = station.RentL4;
+                typeOrSet = "Stations";
+                theBoardPos = boardPos;
+                if(station.Owned)
+                {
+                    ownerName = station.Owner.Name;
+
+                    //Gets rent level, -1 to start from 0
+                    rentLevel = GameClass.stations.Properties.Where(o => o.Owner == station.Owner).Count() - 1;
+                    //Shows if set exclusinvely owned
+                    setExclusivelyOwned = GameClass.stations.SetExclusivelyOwned;
+                }
+            }
+            else if (boardPos == 12 || boardPos == 28)
+            {
+                Utility utility = GameClass.utilities.Properties.First<Utility>(x => x.BoardPosition == boardPos);
+                nameHere = utility.Name;
+                rent = utility.RentL1;
+                rentL1 = utility.RentL2;
+                typeOrSet = "Utilities";
+                theBoardPos = boardPos;
+                if (utility.Owned)
+                {
+                    ownerName = utility.Owner.Name;
+                    //Gets rent level, -1 to start from 0
+                    rentLevel = GameClass.utilities.Properties.Where(o => o.Owner == utility.Owner).Count() - 1;
+                    //Shows if set exclusinvely owned
+                    setExclusivelyOwned = GameClass.utilities.SetExclusivelyOwned;
+                }
+            }
+            else
+            {
+                foreach (KeyValuePair<string, SetProp> keyValue in GameClass.setsPropDict)
+                {
+                    foreach (Property property in keyValue.Value.Properties)
+                    {
+                        if (property.BoardPosition == boardPos)
+                        {
+                            nameHere = property.Name;
+                            rent = property.Rent;
+                            rentL1 = property.RentL1;
+                            rentL2 = property.RentL2;
+                            rentL3 = property.RentL3;
+                            rentL4 = property.RentL4;
+                            rentL5 = property.RentL5;
+                            typeOrSet = property.SetName;
+                            theBoardPos = boardPos;
+
+                            if (property.Owned)
+                            {
+                                ownerName = property.Owner.Name;
+                                //Gets rent level, -1 to start from 0
+                                rentLevel = keyValue.Value.Properties.Where(o => o.Owner == property.Owner).Count() - 1;
+                                //Shows if set exclusinvely owned
+                                setExclusivelyOwned = keyValue.Value.SetExclusivelyOwned;
+                            }
+
+                            //Checking Upgradable Property
+                            if (property.Owned && keyValue.Value.SetExclusivelyOwned)
+                            {
+                                if (property.Owner.Name == Username)
+                                {
+                                    if (property.NumOfUpgrades<5)
+                                    {
+                                        upgradablePotential = true;
+                                        if (property.Owner.Cash >= property.UpgradeCost)
+                                        {
+                                            if(keyValue.Value.Properties.All(o => o.NumOfUpgrades>=property.NumOfUpgrades))
+                                            {
+                                                upgradeEnabled = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                var popupViewModel = new PropertyPopupViewModel(this ,nameHere, theBoardPos, rent, rentL1, rentL2, rentL3, rentL4, rentL5, typeOrSet, upgradablePotential, upgradeEnabled, ownerName, rentLevel, setExclusivelyOwned);
+                var popup = new PropertyPopup(popupViewModel);
+                Page.ShowPopup(popup);
+            });
+
+        });
+    }
+
+    [RelayCommand]
+    async Task Upgrade(PropertyPopupViewModel popVM)
+    {
+        int boardPosition = popVM.BoardPos;
+        var undesiderdPos = new int[] { 7, 22, 36, 2, 17, 33, 0, 10, 20, 30, 4, 38, 5, 15, 25, 35, 12, 28};
+        if (undesiderdPos.Any(o => o == boardPosition))
+        {
+            await ErrorSendBack("Error In App, Please Reload.");
+            return;
+        }
+        System.Diagnostics.Debug.WriteLine("IT WorKSSSS");
+
+        //More Validation
+        //ToConsider  Skipping Validation at the moment as handled in button showing. Will see.
+
+
+        //Implementation
+        PlayerAuthorisationRecord player = new PlayerAuthorisationRecord(Username, Password);
+        await _hubConnection.InvokeAsync("Upgrade", player, TurnMultiplayer.turnMethodCount, boardPosition);
+
+        //Temp measure to increase digit of numofupgrade on popup
+        popVM.RentLevel += 1;
+        //Maybe add validation here in case rent level goes above 5?
+    }
 
 
     async Task<PlayerClass> IdentifyPlayer()
@@ -567,7 +876,7 @@ public partial class GameViewModel:ObservableObject
         return player;
     }
 
-
+    //Updates position for player ofr record
     private void UpdatePos(int playerPos)
     {
         if (playerPos == 1)
@@ -609,6 +918,7 @@ public partial class GameViewModel:ObservableObject
         }
     }
 
+    //updates all the positions
     private void UpdateAllPos()
     {
         int lenPL = GameClass.PlayerList.Count;
@@ -618,7 +928,170 @@ public partial class GameViewModel:ObservableObject
         }
     }
 
+
+    //updates boardspaceviewrecord on all owners
+    private void UpdatePropertyPropsOnViewRecord()
+    {
+        if (GameClass == null)
+        {
+            ErrorSendBack("Please Reconnect");
+            return;
+        }
+        //Get a list of props and boardPoses to stramline later
+        List<(Property Property, int BoardPos)> PropsAndBoardPos = new();
+        foreach (KeyValuePair<string, SetProp> valuePair in GameClass.setsPropDict)
+        {
+            foreach (var tempP in valuePair.Value.Properties)
+            {
+                PropsAndBoardPos.Add((tempP, tempP.BoardPosition));
+            }
+        }
+        foreach (BoardSpaceViewRecord viewSpace in BoardSpaces)
+        {
+            var undesiderdPos = new int[] { 7, 22, 36, 2, 17, 33, 0, 10, 20, 30, 4, 38 };
+            var StationPos = new int[] { 5, 15, 25, 35 };
+            var UtilityPos = new int[] { 12, 28 };
+            
+            //Return if undesired pos
+            if (undesiderdPos.Any(o => o == viewSpace.BoardPosition))
+            {
+                return;
+            }
+            string ownerName;
+            int ownerPos;
+
+            List<string> playerNames = new();
+            foreach (var player in GameClass.PlayerList)
+            {
+                playerNames.Add(player.Name);
+            }
+
+            
+
+
+            //Get Station and update
+            if (StationPos.Any(o => o == viewSpace.BoardPosition))
+            {
+                Station station;
+                try
+                {
+                    station = GameClass.stations.Properties.First(o => o.BoardPosition == viewSpace.BoardPosition);
+                }
+                catch(Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    ErrorSendBack("Please Reconnect, Error in Game");
+                    return;
+                }
+                if (!station.Owned)
+                {
+                    ownerName = string.Empty;
+                    ownerPos = 0;
+                }
+                else
+                {
+                    ownerName = station.Owner.Name;
+                    try
+                    {
+                        ownerPos = playerNames.IndexOf(station.Owner.Name) + 1;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                        ownerPos = 0;
+                    }
+                    
+                }
+            }
+            //Get utility and update
+            else if (UtilityPos.Any(o => o == viewSpace.BoardPosition))
+            {
+                Utility utility;
+                try
+                {
+                    utility = GameClass.utilities.Properties.First(o => o.BoardPosition == viewSpace.BoardPosition);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    ErrorSendBack("Please Reconnect, Error in Game");
+                    return;
+                }
+                if (!utility.Owned)
+                {
+                    ownerName = string.Empty;
+                    ownerPos = 0;
+                }
+                else
+                {
+                    ownerName = utility.Owner.Name;
+                    try
+                    {
+                        ownerPos = playerNames.IndexOf(utility.Owner.Name) + 1;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                        ownerPos = 0;
+                    }
+
+                }
+            }
+            else
+            {
+                Property property;
+                try
+                {
+                    property = PropsAndBoardPos.First(o => o.BoardPos == viewSpace.BoardPosition).Property;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    ErrorSendBack("Please Reconnect, Error in Game");
+                    return;
+                }
+                if (!property.Owned)
+                {
+                    ownerName = string.Empty;
+                    ownerPos = 0;
+                }
+                else
+                {
+                   ownerName = property.Owner.Name;
+                    try
+                    {
+                        ownerPos = playerNames.IndexOf(property.Owner.Name) + 1;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                        ownerPos = 0;
+                    }
+
+                }
+
+                viewSpace.PlayerOwnerNum = ownerPos;
+                viewSpace.PlayerOwnerName = ownerName;
+
+
+            }
+
+        }
+        
+    }
+
+    //Encapsulates all update methods for view records so much only call this method
+    private void UpdateAllViewRecord()
+    {
+        UpdateAllPos();
+        UpdatePropertyPropsOnViewRecord();
+    }
+
+    //DO UPDATE CLASS FOR ALL SO ONly HAVE To Iterate Once
+    
 }
+
+
 
 
 //public class DeviceInfo : IDeviceDisplay

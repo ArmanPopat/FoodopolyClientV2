@@ -17,12 +17,13 @@ public partial class BoardSpaceViewRecord:ObservableObject
     public int BoardPosition { get; }
     public string TypeOrSet { get; }
     public Color Colour { get; }
-    public BoardSpaceViewRecord(string nameArg, int boardPositionArg, string typeOrSetArg, Color colourArg) 
+    public BoardSpaceViewRecord(string nameArg, int boardPositionArg, string typeOrSetArg, Color colourArg, int numOfUpgrades = 0) 
     {
         Name = nameArg;
         BoardPosition = boardPositionArg;
         TypeOrSet = typeOrSetArg;
         Colour = colourArg;
+        NumOfUpgrades = numOfUpgrades;
     }
     [ObservableProperty]
     public bool p1Here = false;
@@ -38,7 +39,15 @@ public partial class BoardSpaceViewRecord:ObservableObject
     [NotifyPropertyChangedFor(nameof(PlayerColor))]
     public int playerOwnerNum = 0;
 
+    [ObservableProperty]
+    public string playerOwnerName = string.Empty;
+
+
     private Color[] _playerColors = new Color[] {Colors.White, Colors.Red, Colors.Green, Colors.Yellow, Colors.Blue};
+
+
+    [ObservableProperty]
+    public int numOfUpgrades;
 
     //Provides colour for player
     public Color PlayerColor
@@ -49,12 +58,5 @@ public partial class BoardSpaceViewRecord:ObservableObject
         }
     }
 
-    static Page Page => Application.Current?.MainPage ?? throw new NullReferenceException();
 
-    [RelayCommand]
-    async Task ShowPropertyModal()
-    {
-        var popup = new PropertyPopup();
-        Page.ShowPopup(popup);
-    }
 }

@@ -4,18 +4,129 @@
              x:Class="FoodopolyClientV2.Views.Popups.PropertyPopup"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:boardspace="clr-namespace:BoardClasses;assembly=FoodopolyClasses"
-             xmlns:viewmodel ="clr-namespace:FoodopolyClientV2.ViewModels"
-             x:DataType="viewmodel:GameViewModel"
+             xmlns:viewmodel ="clr-namespace:FoodopolyClientV2.ViewModels.Popups"
+             x:DataType="viewmodel:PropertyPopupViewModel"
+             xmlns:viewmodelother ="clr-namespace:FoodopolyClientV2.ViewModels"
+             xmlns:converters = "clr-namespace:FoodopolyClientV2.ViewModels.Popups.Converters"
              >
-
     <Grid
-        ColumnDefinitions="2, *, 2"
-        RowDefinitions="2,*, 4*,2">
+        ColumnDefinitions="2, *, *, 2"
+        RowDefinitions="2,*, *, *, *, *, *, *, *, 2">
+
+        <Grid.Resources>
+            <converters:IntToFontWeightRentBoldConverter x:Key="intToFontWeightRentLevel"/>
+            <converters:IntRentDoubledBoolToIntRent x:Key="intRentTouDoubledIntRent"/>
+        </Grid.Resources>
         <Label
-            x:DataType="boardspace:Property"
             Grid.Column="1"
             Grid.Row="1"
-            Text=""/>
+            
+            Text="{Binding Name}"/>
+        <Button
+            Grid.Row="1"
+            Grid.Column="2"
+            Text="Upgrade"
+            IsVisible="{Binding UpgradablePotential}"
+            IsEnabled="{Binding UpgradeEnabled}"
+            Command="{Binding ThisGameViewModel.UpgradeCommand}"
+            CommandParameter="{Binding .}"/>
+        <Label
+            Grid.Column="1"
+            Grid.Row="2"
+            Text="Rent"
+            IsVisible="{Binding RentVisible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=0}"
+            />
+        <Label
+            Grid.Column="2"
+            Grid.Row="2"
+            Text="{Binding Rent, Converter={StaticResource intRentTouDoubledIntRent}, ConverterParameter= {Binding RentDoubled}}"
+            IsVisible="{Binding RentVisible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=0}"
+            />
+        <Label
+            Grid.Column="1"
+            Grid.Row="3"
+            Text="Rent"
+            IsVisible="{Binding RentL1Visible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=1}"
+            />
+        <Label
+            Grid.Column="2"
+            Grid.Row="3"
+            Text="{Binding RentL1}"
+            IsVisible="{Binding RentL1Visible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=1}"
+            />
+        <Label
+            Grid.Column="1"
+            Grid.Row="4"
+            Text="Rent"
+            IsVisible="{Binding RentL2Visible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=2}"
+            />
+        <Label
+            Grid.Column="2"
+            Grid.Row="4"
+            Text="{Binding RentL2}"
+            IsVisible="{Binding RentL2Visible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=2}"
+            />
+        <Label
+            Grid.Column="1"
+            Grid.Row="5"
+            Text="Rent"
+            IsVisible="{Binding RentL3Visible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=3}"
+            />
+        <Label
+            Grid.Column="2"
+            Grid.Row="5"
+            Text="{Binding RentL3}"
+            IsVisible="{Binding RentL3Visible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=3}"
+            />
+        <Label
+            Grid.Column="1"
+            Grid.Row="6"
+            Text="Rent"
+            IsVisible="{Binding RentL4Visible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=4}"
+            />
+        <Label
+            Grid.Column="2"
+            Grid.Row="6"
+            Text="{Binding RentL4}"
+            IsVisible="{Binding RentL4Visible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=4}"
+            />
+        <Label
+            Grid.Column="1"
+            Grid.Row="7"
+            Text="Rent"
+            IsVisible="{Binding RentL5Visible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=5}"
+            />
+        <Label
+            Grid.Column="2"
+            Grid.Row="7"
+            Text="{Binding RentL5}"
+            IsVisible="{Binding RentL5Visible}"
+            FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=5}"
+            />
+        <Label
+            Grid.Column="1"
+            Grid.Row="8"
+            Text="Owner"
+            IsVisible="{Binding RentVisible}"
+            />
+        <Label
+            Grid.Column="2"
+            Grid.Row="8"
+            Text="{Binding OwnerName}"
+            IsVisible="{Binding RentVisible}"
+            />
+
 
     </Grid>
 </toolkit:Popup>
