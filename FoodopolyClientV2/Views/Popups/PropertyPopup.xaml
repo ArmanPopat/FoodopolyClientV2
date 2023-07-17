@@ -11,7 +11,7 @@
              >
     <Grid
         ColumnDefinitions="2, *, *, 2"
-        RowDefinitions="2,*, *, *, *, *, *, *, *, 2">
+        RowDefinitions="2,*, *, *, *, *, *, *, *, *, 2">
 
         <Grid.Resources>
             <converters:IntToFontWeightRentBoldConverter x:Key="intToFontWeightRentLevel"/>
@@ -40,10 +40,17 @@
         <Label
             Grid.Column="2"
             Grid.Row="2"
-            Text="{Binding Rent, Converter={StaticResource intRentTouDoubledIntRent}, ConverterParameter= {Binding RentDoubled}}"
+            Text="{Binding Rent}"
             IsVisible="{Binding RentVisible}"
             FontAttributes="{Binding RentLevel, Converter={StaticResource intToFontWeightRentLevel}, ConverterParameter=0}"
-            />
+            >
+            <!--<Label.Text>
+                <MultiBinding  Converter="{StaticResource intRentTouDoubledIntRent}">
+                    <Binding Path="Rent" Source = "{RelativeSource AncestorType={x:Type viewmodel:PropertyPopupViewModel}}"/>
+                    <Binding Path="RentDoubled" Source = "{RelativeSource AncestorType={x:Type viewmodel:PropertyPopupViewModel}}"/>
+                </MultiBinding>
+            </Label.Text>-->
+        </Label>
         <Label
             Grid.Column="1"
             Grid.Row="3"
@@ -125,6 +132,20 @@
             Grid.Row="8"
             Text="{Binding OwnerName}"
             IsVisible="{Binding RentVisible}"
+            />
+        <Button
+            Grid.Row="9"
+            Grid.Column="1"
+            Text="Mortage"
+            IsVisible="{Binding MortgagePotential}"
+            IsEnabled="True"
+            Command="{Binding ThisGameViewModel.MortgageCommand}"
+            CommandParameter="{Binding .}"/>
+        <Label
+            Grid.Row="9"
+            Grid.Column="1"
+            Text="Mortgaged"
+            IsVisible="{Binding Mortgaged}"
             />
 
 

@@ -1,0 +1,3 @@
+Popups don't fully auto update, i.e not real time, observableproprerty stuff not implemented etc.
+
+Need to see if property in initiate trade can be changed by others while trade initiated

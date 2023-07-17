@@ -8,6 +8,7 @@
              x:DataType="viewmodel:GameViewModel"
              xmlns:local="clr-namespace:FoodopolyClientV2"
              xmlns:controls="clr-namespace:FoodopolyClientV2.Controls"
+             xmlns:player="clr-namespace:FoodopolyClasses.PlayerClasses;assembly=FoodopolyClasses"
              
              >
     <ContentPage.Resources>
@@ -17,7 +18,7 @@
                    x:DataType="records:BoardSpaceViewRecord"
                  BorderColor="Black"
                  CornerRadius="0"
-                 Padding="2"
+                 Padding="1"
                  HorizontalOptions="Fill"
                  VerticalOptions="Fill"
                  >
@@ -28,27 +29,36 @@
                                           CommandParameter="{Binding BoardPosition}"/>
                 </Frame.GestureRecognizers>
                 
-                <Grid RowDefinitions="5,*,3*,*,5"
+                <Grid RowDefinitions="0,1*,2*,*,0"
                       ColumnDefinitions="*">
                     <Label Text="{Binding Name}"
                            BackgroundColor="{Binding Colour}"
                            Grid.Row="1"
-                           Grid.Column="0"/>
+                           Grid.Column="0"
+                           FontSize="14"/>
                     <ContentView Grid.Row="2"
                                  Grid.Column="0">
-                        <HorizontalStackLayout Spacing="2">
-                            <RoundRectangle BackgroundColor="Red"
-                                            IsVisible="{Binding P1Here}">
-                            </RoundRectangle>
-                            <RoundRectangle BackgroundColor="Green"
-                                            IsVisible="{Binding P2Here}">
-                            </RoundRectangle>
-                            <RoundRectangle BackgroundColor="Yellow"
-                                            IsVisible="{Binding P3Here}">
-                            </RoundRectangle>
-                            <RoundRectangle BackgroundColor="Blue"
-                                            IsVisible="{Binding P4Here}">
-                            </RoundRectangle>
+                        <HorizontalStackLayout Spacing="2" VerticalOptions="Center">
+                            <Ellipse BackgroundColor="Red"
+                                            IsVisible="{Binding P1Here}"
+                                            MinimumWidthRequest="20"
+                                            MinimumHeightRequest="20">
+                            </Ellipse>
+                            <Ellipse BackgroundColor="Green"
+                                            IsVisible="{Binding P2Here}"
+                                            MinimumWidthRequest="20"
+                                            MinimumHeightRequest="20">
+                            </Ellipse>
+                            <Ellipse BackgroundColor="Yellow"
+                                            IsVisible="{Binding P3Here}"
+                                            MinimumWidthRequest="20"
+                                            MinimumHeightRequest="20">
+                            </Ellipse>
+                            <Ellipse BackgroundColor="Blue"
+                                            IsVisible="{Binding P4Here}"
+                                            MinimumWidthRequest="20"
+                                            MinimumHeightRequest="20">
+                            </Ellipse>
                         </HorizontalStackLayout>
                     </ContentView>
                     <Rectangle
@@ -478,7 +488,7 @@
             Grid.Column="2"
             Grid.ColumnSpan="8"
             Grid.RowSpan="8"
-            RowDefinitions="20, *, 4*,20"
+            RowDefinitions="20, *, *, 6*,20"
             ColumnDefinitions="20, *, 20">
 
             <HorizontalStackLayout
@@ -510,10 +520,25 @@
                 <Label Text="Your Cash:"/>
                 <Label Text="{Binding YourCash}"/>
             </HorizontalStackLayout>
+            <CollectionView ItemsSource="{Binding GameClass.PlayerList}"
+                            Grid.Column="1"
+                            Grid.Row="2"
+                            ItemsLayout="HorizontalList" HorizontalOptions="Start"
+                            >
+                <CollectionView.ItemTemplate>
+                    <DataTemplate
+                        x:DataType="player:PlayerClass">
+                        <Button
+                            Text="{Binding Name}"
+                             Command="{Binding ShowPlayerModalCommand, Source = {RelativeSource AncestorType={x:Type viewmodel:GameViewModel}}}"
+                            CommandParameter="{Binding . }"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
 
             <CollectionView ItemsSource="{Binding Msgs}"
                             Grid.Column="1"
-                            Grid.Row="2"
+                            Grid.Row="3"
                             >
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="FormattedString">

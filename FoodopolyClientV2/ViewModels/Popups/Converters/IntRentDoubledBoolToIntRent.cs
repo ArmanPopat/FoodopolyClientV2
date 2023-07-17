@@ -1,26 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 
 namespace FoodopolyClientV2.ViewModels.Popups.Converters;
 
-public class IntRentDoubledBoolToIntRent : IValueConverter
+public class IntRentDoubledBoolToIntRent : IMultiValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        int intValue = int.Parse((string)value);
-        if (bool.Parse((string)parameter))
+        int intValue = (int)values[0];
+        
+        if (bool.Parse((string)values[1]))
         {
             intValue = 2 * intValue;
         }
         return intValue;
     }
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object[] ConvertBack(object value, Type[] targetType, object parameter, CultureInfo culture)
     {
         //I.E. Not Implemented
-        return Binding.DoNothing;
+        return (object[])Binding.DoNothing;
+    }
+    public static object GetPropertyValue(object src, string propertyName)
+    {
+        if (propertyName.Contains("."))
+        {
+            var splitIndex = propertyName.IndexOf('.');
+            var parent = propertyName.Substring(0, splitIndex);
+            var child = propertyName.Substring(splitIndex + 1);
+            var obj = src?.GetType().GetProperty(parent)?.GetValue(src, null);
+            return GetPropertyValue(obj, child);
+        }
+        return src?.GetType().GetProperty(propertyName)?.GetValue(src, null);
     }
 }

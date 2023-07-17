@@ -10,7 +10,7 @@ using GameClasses;
 using ConnectivityLibrary.Services;
 using CommunityToolkit.Mvvm.Input;
 using SetClasses;
-using PlayerClasses;
+using FoodopolyClasses.PlayerClasses;
 using FoodopolyClasses.Records;
 using FoodopolyClasses.MultiplayerClasses;
 using BoardClasses;
@@ -27,6 +27,9 @@ using CommunityToolkit.Maui.Views;
 using FoodopolyClientV2.ViewModels.Popups;
 using Microsoft.Maui.Layouts;
 using System.Diagnostics;
+using System.Diagnostics.Tracing;
+using FoodopolyClasses.SetClasses;
+using Microsoft.Maui.ApplicationModel.Communication;
 
 namespace FoodopolyClientV2.ViewModels;
 
@@ -497,6 +500,67 @@ public partial class GameViewModel:ObservableObject
                     }
                 }
             });
+
+        });
+
+        //Called to mortgage property=unfinished
+        _hubConnection.On<int, int>("Mortgage", async (boardPosition, methodCount) =>
+        {
+            await Task.Run(async () =>
+            {
+                if (boardPosition == 12 || boardPosition == 28)
+                {
+                    Utility utility = GameClass.utilities.Properties.First(o =>  o.BoardPosition == boardPosition);
+                    //Checking
+                    if (utility.Owned)
+                    {
+                        Msgs.Add(utility.Mortgage());
+                        return;
+                        
+                    }
+                    await ErrorSendBack("Not Synced. Please Reconnect.");
+                    return;
+                }
+                if (boardPosition == 5 || boardPosition == 15 || boardPosition == 25 || boardPosition == 35)
+                {
+                    Station station = GameClass.stations.Properties.First(o => o.BoardPosition == boardPosition);
+                    //Checking
+                    if (station.Owned)
+                    {
+                        Msgs.Add(station.Mortgage());
+                        return;
+
+                    }
+                    await ErrorSendBack("Not Synced. Please Reconnect.");
+                    return;
+                }
+                foreach (KeyValuePair<string, SetProp> keyValue in GameClass.setsPropDict)
+                {
+                    foreach (Property property in keyValue.Value.Properties)
+                    {
+                        if (property.BoardPosition == boardPosition)
+                        {
+
+                            //Checking
+                            if (property.Owned)
+                            {
+                                if (property.NumOfUpgrades == 0)
+                                {
+                                    if (keyValue.Value.Properties.All(o => o.NumOfUpgrades == 0))
+                                    {
+                                        //Upgrade On Client Side and displays message
+                                        Msgs.Add(property.Mortgage());
+                                        return;
+                                    }
+                                }
+                            }
+                            await ErrorSendBack("Not Synced. Please Reconnect.");
+                            return;
+                        }
+                    }
+                }
+            });
+
         });
 
         try
@@ -668,8 +732,67 @@ public partial class GameViewModel:ObservableObject
 
     //}
 
+
+    [RelayCommand]
+    async Task InitiateTrade(PlayerClass otherPlayer)
+    {
+        //Make sure trying not to initiate trade with self
+        if (otherPlayer.Name == Username)
+        {
+            Debug.WriteLine("Error:Trying to trade with self");
+            await ErrorSendBack("Please Reload.");
+            return;
+        }
+        //Local PlayerWill be assigned here
+        PlayerClass me;
+        await Task<PlayerClass>.Run(async () =>
+        {
+            try
+            {
+                me = GameClass.PlayerList.First(o => o.Name == Username);
+            }
+            catch
+            {
+                Debug.WriteLine("Error:Haven't found local player in player list");
+                await ErrorSendBack("Please Resync.");
+                return;
+            }
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                var popupViewModel = new InitiateTradePopupViewModel(this ,me,otherPlayer);
+                var popup = new IntiateTradePopup(popupViewModel);
+                Page.ShowPopup(popup);
+            });
+        });
+    }
+
+    //Popup command to show my player info
+    [RelayCommand]
+    async Task ShowPlayerModal(PlayerClass player)
+    {
+        List<Station> stations = new List<Station>();
+        List<Utility> utilities = new List<Utility>();
+        List<Property> properties = new List<Property>();
+        bool isMe = false;
+        await Task.Run(() => 
+        {
+            var ownedStationsUtilsAndProps = player.GetOwnedPropsAndStuff(GameClass);
+            stations = ownedStationsUtilsAndProps.Stations;
+            utilities = ownedStationsUtilsAndProps.Utilities;
+            properties = ownedStationsUtilsAndProps.Properties;
+        });
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var popupViewModel = new PlayerPopupViewModel(this, player, stations, utilities, properties, isMe);
+            var popup = new PlayerPopup(popupViewModel);
+            Page.ShowPopup(popup);
+        });
+    }
+
+
     static Page Page => Application.Current?.MainPage ?? throw new NullReferenceException();
 
+    //Command to show popup for property
     [RelayCommand]
     async Task ShowPropertyModal(int boardPos)
     {
@@ -702,6 +825,9 @@ public partial class GameViewModel:ObservableObject
             //ToDo, i.e if button is enables if other set props are upgraded enough, enough cash etc. DIFFERENT TO upgradablePotenial which just ask if possible
             bool upgradeEnabled = false;
 
+            //MortageStuff checks
+            bool mortgagePotenial = false;
+            bool mortgaged = false;
             if (boardPos == 7 || boardPos == 22 || boardPos == 36)
             {
                 nameHere = "Chance";
@@ -766,6 +892,16 @@ public partial class GameViewModel:ObservableObject
                     //Shows if set exclusinvely owned
                     setExclusivelyOwned = GameClass.stations.SetExclusivelyOwned;
                 }
+
+                if(station.Owned)
+                {
+                    if (station.Owner.Name == Username && station.Mortgaged == false)
+                    {
+                        mortgagePotenial = true;
+                    }
+                }
+
+                mortgaged = station.Mortgaged;
             }
             else if (boardPos == 12 || boardPos == 28)
             {
@@ -783,6 +919,14 @@ public partial class GameViewModel:ObservableObject
                     //Shows if set exclusinvely owned
                     setExclusivelyOwned = GameClass.utilities.SetExclusivelyOwned;
                 }
+                if (utility.Owned)
+                {
+                    if (utility.Owner.Name == Username && utility.Mortgaged == false)
+                    {
+                        mortgagePotenial = true;
+                    }
+                }
+                mortgaged = utility.Mortgaged;
             }
             else
             {
@@ -821,7 +965,7 @@ public partial class GameViewModel:ObservableObject
                                         upgradablePotential = true;
                                         if (property.Owner.Cash >= property.UpgradeCost)
                                         {
-                                            if(keyValue.Value.Properties.All(o => o.NumOfUpgrades>=property.NumOfUpgrades))
+                                            if(keyValue.Value.Properties.All(o => o.NumOfUpgrades>=property.NumOfUpgrades))   //check here
                                             {
                                                 upgradeEnabled = true;
                                             }
@@ -829,13 +973,22 @@ public partial class GameViewModel:ObservableObject
                                     }
                                 }
                             }
+                            if (property.Owned)
+                            {
+                                if (property.Owner.Name == Username && property.Mortgaged == false)
+                                {
+                                    mortgagePotenial = true;
+                                }
+                            }
+                            mortgaged = property.Mortgaged;
                         }
                     }
                 }
             }
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                var popupViewModel = new PropertyPopupViewModel(this ,nameHere, theBoardPos, rent, rentL1, rentL2, rentL3, rentL4, rentL5, typeOrSet, upgradablePotential, upgradeEnabled, ownerName, rentLevel, setExclusivelyOwned);
+                var popupViewModel = new PropertyPopupViewModel(this ,nameHere, theBoardPos, rent, rentL1, rentL2, rentL3, rentL4, rentL5, typeOrSet, upgradablePotential,
+                    upgradeEnabled, ownerName, rentLevel, setExclusivelyOwned, mortgagePotenial, mortgaged);
                 var popup = new PropertyPopup(popupViewModel);
                 Page.ShowPopup(popup);
             });
@@ -868,6 +1021,26 @@ public partial class GameViewModel:ObservableObject
         //Maybe add validation here in case rent level goes above 5?
     }
 
+    //Command To mortgage property, most validation is done before as to whether the button is visible 
+    [RelayCommand]
+    async Task Mortgage(PropertyPopupViewModel popVM)
+    {
+        int boardPosition = popVM.BoardPos;
+        var undesiderdPos = new int[] { 7, 22, 36, 2, 17, 33, 0, 10, 20, 30, 4, 38};
+        if (undesiderdPos.Any(o => o == boardPosition))
+        {
+            await ErrorSendBack("Error In App, Please Reload.");
+            return;
+        }
+        System.Diagnostics.Debug.WriteLine("IT WorKSSSS");
+
+
+        //Implementation
+        PlayerAuthorisationRecord player = new PlayerAuthorisationRecord(Username, Password);
+        await _hubConnection.InvokeAsync("Mortgage", player, TurnMultiplayer.turnMethodCount, boardPosition);
+
+
+    }
 
     async Task<PlayerClass> IdentifyPlayer()
     {

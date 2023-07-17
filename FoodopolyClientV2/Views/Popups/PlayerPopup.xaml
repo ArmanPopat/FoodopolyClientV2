@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodopolyClientV2.Views.Popups.PlayerPopup"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:viewmodel ="clr-namespace:FoodopolyClientV2.ViewModels.Popups"
+             x:DataType="viewmodel:PlayerPopupViewModel">
+    <Grid
+        RowDefinitions="5, *, *, *, *, *,5"
+        ColumnDefinitions="5, *, *, 5">
+        <Label
+            Grid.Row="1"
+            Grid.Column="1"
+            Grid.ColumnSpan="2"
+            Text="{Binding Player.Name}"
+            />
+        <Label
+            Grid.Row="2"
+            Grid.Column="1"
+            Text="Cash"/>
+        <Label
+            Grid.Row="2"
+            Grid.Column="2"
+            Text="{Binding Player.Cash}"/>
+        <Label
+            Grid.Row="3"
+            Grid.Column="1"
+            Text="Get Out Of Jail Cards"/>
+        <Label
+            Grid.Row="3"
+            Grid.Column="2"
+            Text="{Binding Player.NumOfGODCards}"/>
+        <Label
+            Grid.Row="4"
+            Grid.Column="1"
+            Text="Liquid Worth"/>
+        <Label
+            Grid.Row="4"
+            Grid.Column="2"
+            Text="{Binding LiquidWorth}"
+            />
+        <Button
+            Grid.Row="5"
+            Grid.Column="1"
+            Text="Initiate Trade"
+            Command="{Binding ThisGameViewModel.InitiateTradeCommand}"
+            CommandParameter="{Binding Player}"/>
+
+    </Grid>
+</toolkit:Popup>
