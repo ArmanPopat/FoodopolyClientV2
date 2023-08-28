@@ -1,9 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FoodopolyClientV2.Views;
 using Microsoft.AspNetCore.SignalR.Client;
 using GameClasses;
@@ -14,22 +9,15 @@ using FoodopolyClasses.PlayerClasses;
 using FoodopolyClasses.Records;
 using FoodopolyClasses.MultiplayerClasses;
 using BoardClasses;
-using Newtonsoft.Json;
-using System.Web.Http;
 using FoodopolyClientV2.Records;
 using System.Xml.Linq;
 using System.Collections.ObjectModel;
 using Microsoft.Maui.Graphics.Converters;
-using System.ComponentModel;
-using Microsoft.Maui.ApplicationModel;
 using FoodopolyClientV2.Views.Popups;
 using CommunityToolkit.Maui.Views;
 using FoodopolyClientV2.ViewModels.Popups;
-using Microsoft.Maui.Layouts;
 using System.Diagnostics;
-using System.Diagnostics.Tracing;
-using FoodopolyClasses.SetClasses;
-using Microsoft.Maui.ApplicationModel.Communication;
+using FoodopolyClasses.TradeClasses;
 
 namespace FoodopolyClientV2.ViewModels;
 
@@ -548,7 +536,7 @@ public partial class GameViewModel:ObservableObject
                                 {
                                     if (keyValue.Value.Properties.All(o => o.NumOfUpgrades == 0))
                                     {
-                                        //Upgrade On Client Side and displays message
+                                        //Mortgage On Client Side and displays message
                                         Msgs.Add(property.Mortgage());
                                         return;
                                     }
@@ -563,6 +551,123 @@ public partial class GameViewModel:ObservableObject
 
         });
 
+        _hubConnection.On<int, string, int, InitiateTradeRecord, GameClass>("TradeReceived", (methodCount, initeePlayerUsername, recordKey, tradeRecord, game) =>
+        {
+            Task.Run(() =>
+            {
+                if (!(tradeRecord.otherPlayerName == Username))
+                {
+                    GameClass.TradeRecords.Add(recordKey, tradeRecord);
+                    
+                    Msgs.Add($"{initeePlayerUsername} has initiated a Trade with {tradeRecord.otherPlayerName}.");
+                    return;
+                }
+                GameClass = game; //unsure why necessary, may remove
+                //May had notfication here, Banner?
+            });
+
+        });
+        _hubConnection.On<int, string, InitiateTradeRecord, GameClass>("TradeError", (methodCount, initeePlayerUsername, tradeRecord, game) =>
+        {
+            Task.Run(async () =>
+            {
+                if (!(tradeRecord.myName == Username))
+                {
+                    return;
+                }
+                GameClass = game; //resyncs game
+                //May add notfication here, Banner? How to show Trade Error? Going to go for alert for now
+                await App.Current.MainPage.DisplayAlert("Trade Error", "There has been an error with you trade, please try again.", "OK");
+            });
+
+        });
+        _hubConnection.On<int, int, InitiateTradeRecord, List<(int BoardPosition, bool ToUnmortgage)>>("TradeConfirmed", (methodCount, tradeRecordKey, tradeRecordSent, mortPropsToDo) =>
+        {
+            InitiateTradeRecord tradeRecord;
+            Task.Run(async () =>
+            {
+                try
+                {
+                    tradeRecord = GameClass.TradeRecords[tradeRecordKey];
+                    if (tradeRecord != tradeRecordSent)
+                    {
+                        throw new InvalidDataException();
+                    }
+                    await Trade.AcceptTradeAsync(tradeRecordKey, tradeRecord, GameClass, mortPropsToDo);
+                    Msgs.Add($"{tradeRecord.otherPlayerName} has confirmed a Trade with {tradeRecord.myName}.");
+                    if (Username == tradeRecord.myName)
+                    {
+                        (List<Station> selectedStations, List<Utility> selectedUtilities, List<Property> selectedProperties) = 
+                        await Trade.IdentifyTheOwnedStuff(tradeRecord.theirSelectedStationsBoardPos, tradeRecord.theirSelectedUtilitiesBoardPos, tradeRecord.theirSelectedPropertiesBoardPos, GameClass);
+                        //ToUnmortgageHERE
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            var popupViewModel = new MortgagedPropertiesTradeAcceptConfirmViewModel(this, selectedStations, selectedUtilities, selectedProperties, tradeRecord, false);
+                            var popup = new MortgagedPropertiesTradeAcceptConfirmPopup(popupViewModel);
+                            Page.ShowPopup(popup);
+                        });
+                    }
+                }
+                catch
+                {
+                    await ErrorSendBack("Error in trade receipt, please rejoin.");
+                    return;
+                }
+            });
+        });
+
+        _hubConnection.On("TradeMortgageFeesDue", async () =>
+        {
+            await Task.Run(async () =>
+            {
+                PlayerClass playerClass = await IdentifyPlayer();
+                InitiateTradeRecord tradeRecord = playerClass.MorgatgeFeesNotPaidOrUnMortgaged[0];
+                (List<Station> selectedStations, List<Utility> selectedUtilities, List<Property> selectedProperties) =
+                        await Trade.IdentifyTheOwnedStuff(tradeRecord.theirSelectedStationsBoardPos, tradeRecord.theirSelectedUtilitiesBoardPos, tradeRecord.theirSelectedPropertiesBoardPos, GameClass);
+                //ToUnmortgageHERE
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    var popupViewModel = new MortgagedPropertiesTradeAcceptConfirmViewModel(this, selectedStations, selectedUtilities, selectedProperties, tradeRecord, false);
+                    var popup = new MortgagedPropertiesTradeAcceptConfirmPopup(popupViewModel);
+                    Page.ShowPopup(popup);
+                });
+            });
+        });
+
+        _hubConnection.On<int, InitiateTradeRecord, List<(int BoardPosition, bool ToUnmortgage)>>("UnmortgageOrFeeTradeResponded", async (methodCount, tradeRecordSent, mortPropsToDo) =>
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    PlayerClass playerClass = await IdentifyPlayer(tradeRecordSent.myName);
+                    (List<Station> selectedStations, List<Utility> selectedUtilities, List<Property> selectedProperties) = await Trade.IdentifyTheOwnedStuff(tradeRecordSent.theirSelectedStationsBoardPos,
+                        tradeRecordSent.theirSelectedUtilitiesBoardPos, tradeRecordSent.theirSelectedPropertiesBoardPos, GameClass);
+                    playerClass.MorgatgeFeesNotPaidOrUnMortgaged.Remove(tradeRecordSent);
+                    await Trade.UnMortgageOrPayFee(playerClass, selectedStations, selectedUtilities, selectedProperties, mortPropsToDo);
+                    try
+                    {
+                        playerClass.MorgatgeFeesNotPaidOrUnMortgaged.Remove(tradeRecordSent);
+                    }
+                    catch
+                    {}
+                }
+                catch
+                {
+                    await ErrorSendBack("Error in trade receipt, please rejoin.");
+                    return;
+                }
+            });
+        });
+        _hubConnection.On<int, int, InitiateTradeRecord, GameClass>("TradeNoLongerValid", async (methodCount,tradeRecordkey, tradeRecordSent, game) =>
+        {
+            await Task.Run(async () =>
+            {
+                GameClass = game; //resyncs game
+                //May add notfication here, Banner? How to show Trade Error? Going to go for alert for now
+                await App.Current.MainPage.DisplayAlert("Trade No Longer Valid", "The trade is no longer valid.", "OK");
+            });
+        });
         try
         {
             await _hubConnection.StartAsync();
@@ -1042,10 +1147,197 @@ public partial class GameViewModel:ObservableObject
 
     }
 
+    //Func that will be triggered when 'Send Trade' pused on initiate trade popup window VIA ITS VIEWMODEL, pulls another popup if any wanted props are mortgaged
+    public async Task StartSendTrade(PlayerClass localPlayer, int mySelectedCash, List<Station> mySelectedStations, List<Utility> mySelectedUtilities, List<Property> mySelectedProperties, int myGODCards,
+         PlayerClass otherPlayer, int theirSelectedCash, List<Station> theirSelectedStations, List<Utility> theirSelectedUtilities, List<Property> theirSelectedProperties, int theirGODCards)
+    {
+        if (theirSelectedStations.Any(o => o.Mortgaged == true) || theirSelectedUtilities.Any(o => o.Mortgaged == true) || theirSelectedProperties.Any(o => o.Mortgaged == true))
+        {
+            //Should work?? Get's List of names, will have to debug
+            //List<String> theirMortgagedOwned = theirSelectedStations.FindAll(o => o.Mortgaged == true).Select(o => o.Name).ToList();
+            //Show Mortgaged prop confirm popup
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                var popupViewModel = new MortgagedPropertiesTradeConfirmViewModel(this, localPlayer, mySelectedCash, mySelectedStations,
+                    mySelectedUtilities, mySelectedProperties, myGODCards, otherPlayer, theirSelectedCash, theirSelectedStations,
+                    theirSelectedUtilities, theirSelectedProperties, theirGODCards);
+                var popup = new MortgagedPropertiesTradeConfirmPopup(popupViewModel);
+                Page.ShowPopup(popup);
+            });
+            return;
+        }
+        await SendTrade(localPlayer, mySelectedCash, mySelectedStations, mySelectedUtilities, mySelectedProperties, myGODCards,
+         otherPlayer, theirSelectedCash, theirSelectedStations, theirSelectedUtilities, theirSelectedProperties, theirGODCards);
+        return;
+    }
+
+
+
+
+    //Function that will be triggered when a trade is going to be sent after potential mortgage popup
+    public async Task SendTrade(PlayerClass localPlayer, int mySelectedCash, List<Station> mySelectedStations, List<Utility> mySelectedUtilities, List<Property> mySelectedProperties, int myGODCards,
+         PlayerClass otherPlayer, int theirSelectedCash, List<Station> theirSelectedStations, List<Utility> theirSelectedUtilities, List<Property> theirSelectedProperties, int theirGODCards)
+    {
+        //validation-Most validation will be on server side
+
+        //Implementation
+        List<int> mySelectedStationsBoardPos = mySelectedStations.Select(o => o.BoardPosition).ToList();
+        List<int> mySelectedUtilitiesBoardPos = mySelectedUtilities.Select(o => o.BoardPosition).ToList();
+        List<int> mySelectedPropertiesBoardPos = mySelectedProperties.Select(o => o.BoardPosition).ToList();
+
+        List<int> theirSelectedStationsBoardPos = theirSelectedStations.Select(o => o.BoardPosition).ToList();
+        List<int> theirSelectedUtilitiesBoardPos = theirSelectedUtilities.Select(o => o.BoardPosition).ToList();
+        List<int> theirSelectedPropertiesBoardPos = theirSelectedProperties.Select(o => o.BoardPosition).ToList();
+
+        PlayerAuthorisationRecord player = new PlayerAuthorisationRecord(Username, Password);
+        InitiateTradeRecord tradeRecord = new InitiateTradeRecord(Username, otherPlayer.Name, mySelectedCash, mySelectedStationsBoardPos, mySelectedUtilitiesBoardPos,
+            mySelectedPropertiesBoardPos, myGODCards, theirSelectedCash, theirSelectedStationsBoardPos, theirSelectedUtilitiesBoardPos, theirSelectedPropertiesBoardPos, theirGODCards);
+        await _hubConnection.InvokeAsync("TradeInitiated", player, TurnMultiplayer.turnMethodCount, tradeRecord);
+
+
+    }
+
+    
+
+    public async Task ShowTrades()
+    {
+        await Task.Run(() =>
+        {
+            int numOfIncomingTrades = GameClass.TradeRecords.Values.Where(o => o.otherPlayerName == Username).Count();
+            int numOfOutgoingTrades = GameClass.TradeRecords.Values.Where(o => o.myName == Username).Count();
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                var popupViewModel = new TradesPopupViewModel(numOfIncomingTrades, numOfOutgoingTrades, this);
+                var popup = new TradesPopup(popupViewModel);
+                Page.ShowPopup(popup);
+            });
+        });
+            
+    }
+
+
+    //These are used by the initial trades popup
+    public async Task SeeIncomingOutgoingTrades(string incomingOrOutgoing)
+    {
+        await Task.Run(() => 
+        {
+            List<InitiateTradeRecord> incomingTradeRecords = GameClass.TradeRecords.Values.Where(o => o.otherPlayerName == Username).ToList();
+            List<InitiateTradeRecord> outgoingTradeRecords = GameClass.TradeRecords.Values.Where(o => o.myName == Username).ToList();
+            List<InitiateTradeRecord> tradeRecords;
+            if (incomingOrOutgoing == "Incoming")
+            {
+                tradeRecords = incomingTradeRecords;
+            }
+            else if (incomingOrOutgoing == "Outgoing")
+            {
+                tradeRecords = outgoingTradeRecords;
+            }
+            else
+            {
+                Debug.WriteLine(incomingOrOutgoing + " is an invalid argument");
+                throw new ArgumentException("This is not a valid input for incomingOrOutgoing.");
+            }
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                var popupViewModel = new IncomingOutgoingTradesPopupViewModel(tradeRecords, incomingOrOutgoing, this);
+                var popup = new IncomingOutgoingTradesPopup(popupViewModel);
+                Page.ShowPopup(popup);
+            });
+        });
+    }
+
+    public async Task SeeSpecificTrade(InitiateTradeRecord tradeRecord, string incomingOrOutgoing) {
+        //I.e stuff local player is goviong away
+        (List<Station> mySelectedStations, List<Utility> mySelectedUtilities, List<Property> mySelectedProperties) = await Trade.IdentifyTheOwnedStuff(tradeRecord.mySelectedStationsBoardPos,
+            tradeRecord.mySelectedUtilitiesBoardPos, tradeRecord.mySelectedPropertiesBoardPos, GameClass);
+        //I.e stuff localplayer is gwtting
+        (List<Station> theirSelectedStations, List<Utility> theirSelectedUtilities, List<Property> theirSelectedProperties) = await Trade.IdentifyTheOwnedStuff(tradeRecord.theirSelectedStationsBoardPos,
+            tradeRecord.theirSelectedUtilitiesBoardPos, tradeRecord.theirSelectedPropertiesBoardPos, GameClass);
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var popupViewModel = new SeeSpecififcTradePopupViewModel(this, tradeRecord.myName, tradeRecord.mySelectedCash, mySelectedStations, mySelectedUtilities, mySelectedProperties,
+                tradeRecord.myGODCards, tradeRecord.otherPlayerName, tradeRecord.theirSelectedCash, theirSelectedStations, theirSelectedUtilities, theirSelectedProperties, 
+                tradeRecord.theirGODCards, tradeRecord, incomingOrOutgoing);
+            var popup = new SeeSpecificTradePopup(popupViewModel);
+            Page.ShowPopup(popup);
+        });
+    }
+
+    public async Task StartSendConfirmTrade(InitiateTradeRecord tradeRecord, string initeeName, int cashToBeReceived, List<Station> stationsToBeReceived,
+        List<Utility> utilitiesToBeReceived, List<Property> propsToBeRecieved, int gODCardsToBeReceived, string localName, int cashToBeSent,
+        List<Station> stationsToBeSent, List<Utility> utilitiesToBeSent, List<Property> propsToBeSent, int gODCardsToBeSent)
+    {
+        //Validation will be on the server side
+
+        
+        await Task.Run(async () =>
+        {
+            
+            if (propsToBeRecieved.Any(o=> o.Mortgaged == true))
+            {
+                PlayerClass localPlayer = await IdentifyPlayer(localName);
+                PlayerClass initeePlayer = await IdentifyPlayer(initeeName);
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    //Done in such a way so that the right ones are checked
+                    var popupViewModel = new MortgagedPropertiesTradeConfirmViewModel(this, localPlayer, cashToBeSent, stationsToBeSent,
+                        utilitiesToBeSent, propsToBeSent, gODCardsToBeSent, initeePlayer, cashToBeReceived, stationsToBeReceived,
+                        utilitiesToBeReceived, propsToBeRecieved, gODCardsToBeReceived, false);
+                    var popup = new MortgagedPropertiesTradeConfirmPopup(popupViewModel);
+                    Page.ShowPopup(popup);
+                });
+                return;
+            }
+            else
+            {
+
+                await SendConfirmTrade(tradeRecord, new List<(int BoardPosition, bool ToUnmortgage)>());
+                return;
+            }
+        });
+
+    }
+    public async Task SendConfirmTrade(InitiateTradeRecord tradeRecord, List<(int BoardPosition, bool ToUnmortgage)> mortPropsToDo)
+    {
+        int tradeKey = await Task<int>.Run(async () =>
+        {
+            //Find key of traderecord or atleast try, NEED TO TEST
+            int tradeKey;
+            try
+            {
+                tradeKey = GameClass.TradeRecords.First(o => o.Value == tradeRecord).Key;
+            }
+            catch
+            {
+                Debug.WriteLine("Can't find key of that tradeRecord.");
+                await App.Current.MainPage.DisplayAlert("Trade Error", "Cannot find that trade, it may have been withdrawn.", "OK");
+                return (-1);
+            }
+            return tradeKey;
+        });
+        if (tradeKey < 0)
+            return;
+        PlayerAuthorisationRecord player = new PlayerAuthorisationRecord(Username, Password);
+        await _hubConnection.InvokeAsync("TradeConfirmed", player, TurnMultiplayer.turnMethodCount, tradeKey, tradeRecord, mortPropsToDo);
+    }
+
+    public async Task RespondUnmortgageOrFeeTrade(InitiateTradeRecord tradeRecord, List<(int BoardPosition, bool ToUnmortgage)> mortPropsToDo)
+    {
+        PlayerAuthorisationRecord player = new PlayerAuthorisationRecord(Username, Password);
+        await _hubConnection.InvokeAsync("UnmortgageOrFeeTradeResponse", player, TurnMultiplayer.turnMethodCount, tradeRecord, mortPropsToDo);
+    }
+
     async Task<PlayerClass> IdentifyPlayer()
     {
 
         PlayerClass player = GameClass.PlayerList.First<PlayerClass>((player) => (player.Name == Username));
+        return player;
+    }
+    async Task<PlayerClass> IdentifyPlayer(string playerName)
+    {
+
+        PlayerClass player = GameClass.PlayerList.First<PlayerClass>((player) => (player.Name == playerName));
         return player;
     }
 
@@ -1252,6 +1544,8 @@ public partial class GameViewModel:ObservableObject
         }
         
     }
+
+
 
     //Encapsulates all update methods for view records so much only call this method
     private void UpdateAllViewRecord()

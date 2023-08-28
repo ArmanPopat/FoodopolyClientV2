@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodopolyClientV2.Views.Popups.SeeSpecificTradePopup"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:viewmodel ="clr-namespace:FoodopolyClientV2.ViewModels.Popups"
+             xmlns:boardclasses="clr-namespace:BoardClasses;assembly=FoodopolyClasses"
+             x:DataType="viewmodel:SeeSpecififcTradePopupViewModel"
+             xmlns:converters = "clr-namespace:FoodopolyClientV2.ViewModels.Popups.Converters">
+    <Grid RowDefinitions="2, 7*, *, 2"
+          ColumnDefinitions="2,*,*,2">
+        <Grid.Resources>
+            <converters:PropertySetToColourConverter x:Key="PropSetToColour"/>
+        </Grid.Resources>
+        <VerticalStackLayout
+            Grid.Row="1"
+            Grid.Column="1">
+            <Label
+                Text="{Binding MyName, StringFormat= '{0} gives:'}"/>
+            <Label
+                Text="{Binding MySelectedCash, StringFormat= 'Cash: {0}'}">
+            </Label>
+            <CollectionView ItemsSource="{Binding MyStations}"
+                            ItemsLayout="VerticalList">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate
+                        x:DataType="boardclasses:Station">
+                        <Label
+                                Text="{Binding Name}"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <CollectionView ItemsSource="{Binding MyUtilities}"
+                            ItemsLayout="VerticalList">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate
+                        x:DataType="boardclasses:Utility">
+                        <Label
+                                Text="{Binding Name}"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <CollectionView ItemsSource="{Binding MyProperties}"
+                            ItemsLayout="VerticalList">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate
+                        x:DataType="boardclasses:Property">
+                        <Label
+                                Text="{Binding Name}"
+                                BackgroundColor="{Binding SetName, Converter={StaticResource PropSetToColour}}"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Label
+                Text="{Binding MySelectedGODCards, StringFormat= 'GOD Cards: {0}'}"/>
+        </VerticalStackLayout>
+        <VerticalStackLayout
+            Grid.Row="1"
+            Grid.Column="2">
+            <Label
+                Text="{Binding TheirName, StringFormat= '{0} gives:'}"/>
+            <Label
+                Text="{Binding TheirSelectedCash, StringFormat= 'Cash: {0}'}"/>
+            <CollectionView ItemsSource="{Binding TheirStations}"
+                            ItemsLayout="VerticalList">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate
+                        x:DataType="boardclasses:Station">
+                        <Label
+                                Text="{Binding Name}"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <CollectionView ItemsSource="{Binding TheirUtilities}"
+                            ItemsLayout="VerticalList">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate
+                        x:DataType="boardclasses:Utility">
+                        <Label
+                                Text="{Binding Name}"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <CollectionView ItemsSource="{Binding TheirProperties}"
+                            ItemsLayout="VerticalList">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate
+                        x:DataType="boardclasses:Property">
+                        <Label
+                                Text="{Binding Name}"
+                                BackgroundColor="{Binding SetName, Converter={StaticResource PropSetToColour}}"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Label
+                Text="{Binding TheirSelectedGodCards, StringFormat= 'GOD Cards: {0}'}"/>
+        </VerticalStackLayout>
+        <Button
+            Grid.Row="2"
+            Grid.Column="1"
+            Command="{Binding ConfirmStartTradeSendCommand}"
+            IsVisible="{Binding Incoming}"/>
+        <Button
+            Grid.Row="2"
+            Grid.Column="1"
+            Command="{Binding ConfirmCancelTradeSendCommand}"
+            IsVisible="{Binding Outgoing}"/>
+    </Grid>
+</toolkit:Popup>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodopolyClientV2.Views.Popups.MortgagedPropertiesTradeConfirmPopup"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:viewmodel ="clr-namespace:FoodopolyClientV2.ViewModels.Popups"
+              x:DataType="viewmodel:MortgagedPropertiesTradeConfirmViewModel">
+    <VerticalStackLayout>
+        <Label
+            Text="Note: You will either have to unmortgage these when you receive them, or pay a 10% fee to keep mortgaged."/>
+        <Label 
+            Text="You'll recieve these properties that are mortgaged:" />
+        <CollectionView
+            ItemsLayout="VerticalList"
+            ItemsSource="{Binding ListOfMortagedOwned}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate
+                        x:DataType="FormattedString">
+                    <Label
+                                Text="{Binding .}"/>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Button
+            Text="Send Trade"
+            Command="{Binding SendTradeCommand}"
+            IsEnabled="{Binding Initiating}"
+            IsVisible="{Binding Initiating}"
+            />
+        <Button
+            Text="Accept Trade"
+            Command="{Binding AcceptTradeCommand}"
+            IsEnabled="{Binding Confirming}"
+            IsVisible="{Binding Confirming}"
+            />
+    </VerticalStackLayout>
+</toolkit:Popup>

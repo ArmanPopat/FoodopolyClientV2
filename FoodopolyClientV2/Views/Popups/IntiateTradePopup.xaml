@@ -7,7 +7,7 @@
              x:DataType="viewmodel:InitiateTradePopupViewModel"
              xmlns:boardclasses="clr-namespace:BoardClasses;assembly=FoodopolyClasses"
              xmlns:converters = "clr-namespace:FoodopolyClientV2.ViewModels.Popups.Converters">
-    <Grid RowDefinitions="2, *, 2"
+    <Grid RowDefinitions="2, 7*, *, *, 2"
           ColumnDefinitions="2,*,*,2">
         <Grid.Resources>
             <converters:PropertySetToColourConverter x:Key="PropSetToColour"/>
@@ -19,7 +19,15 @@
                 Placeholder="Cash"
                 Text="{Binding MySelectedCash}"
                 Keyboard="Numeric"
-                />
+                >
+                <Entry.Behaviors>
+                    <toolkit:NumericValidationBehavior
+                        Flags="ValidateOnValueChanged"
+                        MinimumValue="0"
+                        MaximumValue="{Binding MyCash}"
+                        MaximumDecimalPlaces="0"/>
+                </Entry.Behaviors>
+            </Entry>
             <CollectionView ItemsSource="{Binding MyStations}"
                             ItemsLayout="VerticalList"
                             SelectionMode="Multiple"
@@ -44,7 +52,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <CollectionView ItemsSource="{Binding MyProperties}"
+            <CollectionView ItemsSource="{Binding MyUnupgradedProperties}"
                             ItemsLayout="VerticalList"
                             SelectionMode="Multiple"
                             SelectedItems="{Binding MySelectedProperties}">
@@ -57,6 +65,19 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+            <Entry
+                Placeholder="Get Out Of Jail Cards"
+                Text="{Binding MySelectedGODCards}"
+                Keyboard="Numeric"
+                >
+                <Entry.Behaviors>
+                    <toolkit:NumericValidationBehavior
+                        Flags="ValidateOnValueChanged"
+                        MinimumValue="0"
+                        MaximumValue="{Binding MyGODCards}"
+                        MaximumDecimalPlaces="0"/>
+                </Entry.Behaviors>
+            </Entry>
         </VerticalStackLayout>
         <VerticalStackLayout
             Grid.Row="1"
@@ -65,8 +86,16 @@
                 Placeholder="Cash"
                 Text="{Binding TheirSelectedCash}"
                 Keyboard="Numeric"
-                />
-            <CollectionView ItemsSource="{Binding TheirStations}"
+                >
+                <Entry.Behaviors>
+                    <toolkit:NumericValidationBehavior
+                        Flags="ValidateOnValueChanged"
+                        MinimumValue="0"
+                        MaximumValue="{Binding TheirCash}"
+                        MaximumDecimalPlaces="0"/>
+                </Entry.Behaviors>
+            </Entry>
+                <CollectionView ItemsSource="{Binding TheirStations}"
                             ItemsLayout="VerticalList"
                             SelectionMode="Multiple"
                             SelectedItems="{Binding TheirSelectedStations}">
@@ -90,7 +119,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <CollectionView ItemsSource="{Binding TheirProperties}"
+            <CollectionView ItemsSource="{Binding TheirUnupgradedProperties}"
                             ItemsLayout="VerticalList"
                             SelectionMode="Multiple"
                             SelectedItems="{Binding TheirSelectedProperties}">
@@ -98,11 +127,34 @@
                     <DataTemplate
                         x:DataType="boardclasses:Property">
                         <Label
+                            
                                 Text="{Binding Name}"
                                 BackgroundColor="{Binding SetName, Converter={StaticResource PropSetToColour}}"/>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+            <Entry
+                Placeholder="Get Out Of Jail Cards"
+                Text="{Binding TheirSelectedGODCards}"
+                Keyboard="Numeric"
+                >
+                <Entry.Behaviors>
+                    <toolkit:NumericValidationBehavior
+                        Flags="ValidateOnValueChanged"
+                        MinimumValue="0"
+                        MaximumValue="{Binding TheirGODCards}"
+                        MaximumDecimalPlaces="0"/>
+                </Entry.Behaviors>
+            </Entry>
         </VerticalStackLayout>
+        <Button
+            Grid.Row="2"
+            Grid.Column="1"
+            Command="{Binding InitiateTradeSendCommand}"/>
+        <Label
+            Grid.Row="3"
+            Grid.Column="1"
+            Grid.ColumnSpan="2"
+            Text="Note: Upgraded Foods will not appear here. They must be downgraded to be traded."/>
     </Grid>
 </toolkit:Popup>

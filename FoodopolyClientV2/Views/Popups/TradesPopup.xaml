@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodopolyClientV2.Views.Popups.TradesPopup"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:boardspace="clr-namespace:BoardClasses;assembly=FoodopolyClasses"
+             xmlns:viewmodel ="clr-namespace:FoodopolyClientV2.ViewModels.Popups"
+             x:DataType="viewmodel:TradesPopupViewModel">
+
+    <StackLayout>
+        <Frame>
+            <Frame.GestureRecognizers>
+                <TapGestureRecognizer
+                    NumberOfTapsRequired="1"
+                    Command="{Binding ShowIncomingOutgoingTradesCommand}"
+                    CommandParameter="Incoming"/>
+            </Frame.GestureRecognizers>
+            <VerticalStackLayout>
+                <Label
+                    Text="Incoming Trades"/>
+                <Label
+                    Text="{Binding IncomingTrades}"/>
+            </VerticalStackLayout>
+        </Frame>
+        <Frame>
+            <Frame.GestureRecognizers>
+                <TapGestureRecognizer
+                    NumberOfTapsRequired="1"
+                    Command="{Binding ShowIncomingOutgoingTradesCommand}"
+                    CommandParameter="Outgoing"/>
+            </Frame.GestureRecognizers>
+            <VerticalStackLayout>
+                <Label
+                    Text="Outgoing Trades"/>
+                <Label
+                    Text="{Binding OutgoingTrades}"/>
+            </VerticalStackLayout>
+        </Frame>
+    </StackLayout>
+    
+    
+</toolkit:Popup>

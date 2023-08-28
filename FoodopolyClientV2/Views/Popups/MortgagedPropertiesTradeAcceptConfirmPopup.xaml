@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FoodopolyClientV2.Views.Popups.MortgagedPropertiesTradeAcceptConfirmPopup"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:viewmodel ="clr-namespace:FoodopolyClientV2.ViewModels.Popups"
+             xmlns:dataTypes ="clr-namespace:FoodopolyClientV2.Views.Popups.DataTypeClasses"
+             x:DataType="viewmodel:MortgagedPropertiesTradeAcceptConfirmViewModel">
+    <VerticalStackLayout>
+        <Label 
+            Text="These received properties are mortgaged. Please select the ones you wish to unmortgage, you will be charged 10% of the the inmortgage fee for the others." />
+        <HorizontalStackLayout>
+            <Label
+                            Text="Mame"/>
+            <Label
+                            Text="Cost to Unmortgage"/>
+        </HorizontalStackLayout>
+        <CollectionView
+            ItemsLayout="VerticalList"
+            ItemsSource="{Binding ListOfMortagedOwned}"
+            SelectionMode="Multiple"
+            SelectedItems="{Binding ToUnmortgage}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate
+                        x:DataType="dataTypes:MortgageTuple">
+                    <HorizontalStackLayout>
+                        <Label
+                            Text="{Binding Name}"/>
+                        <Label
+                            Text="{Binding UnmortgageFee}"/>
+                    </HorizontalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Button
+            Text="Accept Trade"
+            Command="{Binding SendConfirmTradeCommand}"
+            IsVisible="{Binding Accepting}"
+            IsEnabled="{Binding Accepting}"
+            />
+        <Button
+            
+    </VerticalStackLayout>
+</toolkit:Popup>

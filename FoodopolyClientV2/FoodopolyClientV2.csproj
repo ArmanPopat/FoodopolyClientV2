@@ -68,6 +68,12 @@
 	  <Compile Update="Views\GamePage.xaml.cs">
 	    <DependentUpon>GamePage.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Views\Popups\IncomingOutgoingTradesPopup.xaml.cs">
+	    <DependentUpon>IncomingOutgoingTradesPopup.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\Popups\MortgagedPropertiesTradeAcceptConfirmPopup.xaml.cs">
+	    <DependentUpon>MortgagedPropertiesTradeAcceptConfirmPopup.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -83,10 +89,25 @@
 	  <MauiXaml Update="Views\Popups\IntiateTradePopup.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Views\Popups\MortgagedPropertiesTradeAcceptConfirmPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Popups\MortgagedPropertiesTradeConfirmPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Popups\IncomingOutgoingTradesPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Views\Popups\PlayerPopup.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\Popups\PropertyPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Popups\SeeSpecificTradePopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Popups\TradesPopup.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>

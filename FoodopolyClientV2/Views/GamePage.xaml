@@ -515,6 +515,11 @@
                         Command="{Binding EndTurnCommand}"
                         IsVisible="{Binding CanEnd}"
                         />
+                <Button Text="Trades"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        Command=""
+                        />
             </HorizontalStackLayout>
             <HorizontalStackLayout>
                 <Label Text="Your Cash:"/>
